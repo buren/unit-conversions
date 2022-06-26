@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+servethis () {
+	if [[ $1 == "-help" ]] || [[ $1 == "--help" ]] || [[ $1 == "-h" ]]
+	then
+		echo "Usage:"
+		echo -e "\t servethis <optional_directory>"
+		echo "serve the current/specified directory"
+	else
+		if [ ! -z "$1" ]
+		then
+			cd $1
+		fi
+		ret=`python -c 'import sys; print("%i" % (sys.hexversion<0x03000000))'`
+		if [ $ret -eq 0 ]
+		then
+			python -c 'python -m http.server 8000'
+		else
+			python -c 'import SimpleHTTPServer; SimpleHTTPServer.test()'
+		fi
+	fi
+}
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+echo 'Starting server on http://localhost:8000'
+servethis "$SCRIPT_DIR/../"

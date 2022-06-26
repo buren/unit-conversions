@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversions</title>
+
+    <!-- Utils -->
+    <script src="utils/round-number.js"></script>
+
+    <!-- Converters -->
+    <script src="converters/clock.js"></script>
+    <script src="converters/distance.js"></script>
+    <script src="converters/pace.js"></script>
+    <script src="converters/weight.js"></script>
+</head>
+<body>
+    <!-- Weight conversions -->
+    <div>
+        <h1>lbs to/from kg</h1>
+        <input type="text" placeholder="Value" id="kg-lbs-input">
+
+        <input type="radio" id="kg-lbs-lbs-unit" name="kg-lbs-unit" value="lbs" checked>
+        <label for="kg-lbs-lbs-unit">lbs</label>
+        
+        <input type="radio" id="kg-lbs-kg-unit" name="kg-lbs-unit" value="kg">
+        <label for="kg-lbs-kg-unit">kg</label>
+
+        <p id="kg-lbs-result-area">Result: <span id="kg-lbs-result-value">-</span></p>
+    </div>
+
+    <!-- Weight event handlers -->
+    <script>
+        const kgLbsResultValueElement = document.querySelector('#kg-lbs-result-value');
+        const updateKgLbs = () => {
+            const kgLbsElement = document.querySelector('#kg-lbs-input');
+            const value = parseFloat(kgLbsElement.value);
+            if (isNaN(value)) {
+                kgLbsResultValueElement.innerText = 'Invalid number';
+                return;
+            }
+            const unit = document.querySelector('input[name="kg-lbs-unit"]:checked').value;
+            kgLbsResultValueElement.innerText = Weight.convertHuman(value, unit);
+        };
+
+        document.querySelector('#kg-lbs-input')
+            .addEventListener('keyup', updateKgLbs);
+
+        document.querySelectorAll("input[name = 'kg-lbs-unit']")
+            .forEach((element) => element.addEventListener('change', updateKgLbs));
+    </script>
+
+    <!-- Distance convertions -->
+    <div>
+        <h1>Miles to/from km</h1>
+        <input type="text" placeholder="Value" id="miles-km-input">
+        
+        <input type="radio" id="miles-km-miles-unit" name="miles-km-unit" value="miles" checked>
+        <label for="miles-km-miles-unit">miles</label>
+        
+        <input type="radio" id="miles-km-km-unit" name="miles-km-unit" value="km">
+        <label for="miles-km-km-unit">km</label>
+
+        <p id="miles-km-result-area">Result: <span id="miles-km-result-value">-</span></p>
+    </div>
+
+    <!-- Distance event handlers -->
+    <script>
+        const milesKmResultValueElement = document.querySelector('#miles-km-result-value');
+        const updateMilesKm = () => {
+            const milesKmElement = document.querySelector('#miles-km-input');
+            const value = parseFloat(milesKmElement.value);
+            if (isNaN(value)) {
+                milesKmResultValueElement.innerText = 'Invalid number';
+                return;
+            }
+            const unit = document.querySelector('input[name="miles-km-unit"]:checked').value;
+            milesKmResultValueElement.innerText = Distance.convertHuman(value, unit);
+        };
+
+        document.querySelector('#miles-km-input')
+            .addEventListener('keyup', updateMilesKm);
+
+        document.querySelectorAll("input[name='miles-km-unit']")
+            .forEach((element) => element.addEventListener('change', updateMilesKm));
+    </script>
+
+    <!-- Pace convertions -->
+    <div>
+        <h1>min/mile to min/km</h1>
+        <input type="text" placeholder="Minutes" id="min-mile-min-km-input-min">
+        <input type="text" placeholder="Seconds" id="min-mile-min-km-input-sec">
+    
+        <input type="radio" id="min-mile-min-km-miles-unit" name="min-mile-min-km-unit" value="min/mile" checked>
+        <label for="min-mile-min-km-miles-unit">min/mile</label>
+    
+        <input type="radio" id="min-mile-min-km-km-unit" name="min-mile-min-km-unit" value="min/km">
+        <label for="min-mile-min-km-km-unit">min/km</label>
+    
+        <p id="min-mile-min-km-result-area">Result: <span id="min-mile-min-km-result-value">-</span></p>
+    </div>
+    
+    <!-- Pace event handlers -->
+    <script>
+        const minMilesMinKmResultValueElement = document.querySelector('#min-mile-min-km-result-value');
+        const updateMinMilesMinKm = () => {
+            const milesKmMinElement = document.querySelector('#min-mile-min-km-input-min');
+            const valueMin = parseFloat(milesKmMinElement.value);
+            const milesKmSecElement = document.querySelector('#min-mile-min-km-input-sec');
+            const valueSec = parseFloat(milesKmSecElement.value) || 0;
+            if (isNaN(valueMin) || isNaN(valueSec)) {
+                minMilesMinKmResultValueElement.innerText = 'Invalid number';
+                return;
+            }
+            const unit = document.querySelector('input[name="min-mile-min-km-unit"]:checked').value;
+            minMilesMinKmResultValueElement.innerText = Pace.convertHuman(valueMin, valueSec, unit);
+        };
+
+        document.querySelector('#min-mile-min-km-input-min')
+            .addEventListener('keyup', updateMinMilesMinKm);
+        document.querySelector('#min-mile-min-km-input-sec')
+                .addEventListener('keyup', updateMinMilesMinKm);
+
+        document.querySelectorAll("input[name='min-mile-min-km-unit']")
+            .forEach((element) => element.addEventListener('change', updateMinMilesMinKm));
+    </script>
+</body>
+</html>
