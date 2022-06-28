@@ -10,6 +10,7 @@ Simple unit conversions that I often find myself using.
 
 ### TODO
 
+- Race result to average pace
 - Celcius to/from Fahrenheit
 - Climbing grades
 - Height (feet and inches to cm)
