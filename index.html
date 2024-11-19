@@ -1,129 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conversions</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Converter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Utils -->
-    <script src="utils/round-number.js"></script>
+  <!-- Utils -->
+  <script src="utils/round-number.js"></script>
 
-    <!-- Converters -->
-    <script src="converters/clock.js"></script>
-    <script src="converters/distance.js"></script>
-    <script src="converters/pace.js"></script>
-    <script src="converters/weight.js"></script>
+  <!-- Converters -->
+  <script src="converters/clock.js"></script>
+  <script src="converters/distance.js"></script>
+  <script src="converters/pace.js"></script>
+  <script src="converters/weight.js"></script>
 </head>
-<body>
-    <!-- Weight conversions -->
-    <div>
-        <h1>lbs to/from kg</h1>
-        <input type="text" placeholder="Value" id="kg-lbs-input">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div id="app"></div>
 
-        <input type="radio" id="kg-lbs-lbs-unit" name="kg-lbs-unit" value="lbs" checked>
-        <label for="kg-lbs-lbs-unit">lbs</label>
-        
-        <input type="radio" id="kg-lbs-kg-unit" name="kg-lbs-unit" value="kg">
-        <label for="kg-lbs-kg-unit">kg</label>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-        <p id="kg-lbs-result-area">Result: <span id="kg-lbs-result-value">-</span></p>
-    </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.21.0/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-    <!-- Weight event handlers -->
-    <script>
-        const kgLbsResultValueElement = document.querySelector('#kg-lbs-result-value');
-        const updateKgLbs = () => {
-            const kgLbsElement = document.querySelector('#kg-lbs-input');
-            const value = parseFloat(kgLbsElement.value);
-            if (isNaN(value)) {
-                kgLbsResultValueElement.innerText = 'Invalid number';
-                return;
-            }
-            const unit = document.querySelector('input[name="kg-lbs-unit"]:checked').value;
-            kgLbsResultValueElement.innerText = Weight.convertHuman(value, unit);
-        };
+    function LbsKgConverter() {
+      const defaultValue = "1";
+      const defaultUnit = "lbs";
 
-        document.querySelector('#kg-lbs-input')
-            .addEventListener('keyup', updateKgLbs);
+      const [value, setValue] = useState(defaultValue);
+      const [unit, setUnit] = useState(defaultUnit);
+      const [result, setResult] = useState("-");
 
-        document.querySelectorAll("input[name = 'kg-lbs-unit']")
-            .forEach((element) => element.addEventListener('change', updateKgLbs));
-    </script>
+      const update = (newValue, newUnit) => {
+        const v = newValue === "" ? defaultValue : newValue;
+        setValue(v);
+        setUnit(newUnit);
+        setResult(Weight.convertHuman(v, newUnit));
+      };
 
-    <!-- Distance convertions -->
-    <div>
-        <h1>Miles to/from km</h1>
-        <input type="text" placeholder="Value" id="miles-km-input">
-        
-        <input type="radio" id="miles-km-miles-unit" name="miles-km-unit" value="miles" checked>
-        <label for="miles-km-miles-unit">miles</label>
-        
-        <input type="radio" id="miles-km-km-unit" name="miles-km-unit" value="km">
-        <label for="miles-km-km-unit">km</label>
+      useEffect(() => {
+        update(value, unit); // set initial
+      });
 
-        <p id="miles-km-result-area">Result: <span id="miles-km-result-value">-</span></p>
-    </div>
+      return (
+        <>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">lbs to/from kg</h2>
+          <div className="flex items-center space-x-4">
+            <input type="number" className="w-20 p-2 border border-gray-300 rounded" placeholder={defaultValue} onChange={(e) => update(e.target.value, unit)} />
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="weight" value="lbs" defaultChecked={unit === "lbs"} onChange={() => update(value, "lbs")} className="accent-blue-500" />
+                <span>lbs</span>
+              </label>
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="weight" value="kg" defaultChecked={unit === "kg"} onChange={() => update(value, "kg")} className="accent-blue-500" />
+                <span>kg</span>
+              </label>
+            </div>
+          </div>
+          <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
+        </>
+      )
+    }
 
-    <!-- Distance event handlers -->
-    <script>
-        const milesKmResultValueElement = document.querySelector('#miles-km-result-value');
-        const updateMilesKm = () => {
-            const milesKmElement = document.querySelector('#miles-km-input');
-            const value = parseFloat(milesKmElement.value);
-            if (isNaN(value)) {
-                milesKmResultValueElement.innerText = 'Invalid number';
-                return;
-            }
-            const unit = document.querySelector('input[name="miles-km-unit"]:checked').value;
-            milesKmResultValueElement.innerText = Distance.convertHuman(value, unit);
-        };
+    function MilesToKmConverter() {
+      const defaultValue = "1";
+      const defaultUnit = "miles";
 
-        document.querySelector('#miles-km-input')
-            .addEventListener('keyup', updateMilesKm);
+      const [value, setValue] = useState(defaultValue);
+      const [unit, setUnit] = useState(defaultUnit);
+      const [result, setResult] = useState("-");
 
-        document.querySelectorAll("input[name='miles-km-unit']")
-            .forEach((element) => element.addEventListener('change', updateMilesKm));
-    </script>
+      const update = (newValue, newUnit) => {
+        const v = newValue === "" ? defaultValue : newValue;
+        setValue(v);
+        setUnit(newUnit);
+        setResult(Distance.convertHuman(v, newUnit));
+      };
 
-    <!-- Pace convertions -->
-    <div>
-        <h1>min/mile to min/km</h1>
-        <input type="text" placeholder="Minutes" id="min-mile-min-km-input-min">
-        <input type="text" placeholder="Seconds" id="min-mile-min-km-input-sec">
-    
-        <input type="radio" id="min-mile-min-km-miles-unit" name="min-mile-min-km-unit" value="min/mile" checked>
-        <label for="min-mile-min-km-miles-unit">min/mile</label>
-    
-        <input type="radio" id="min-mile-min-km-km-unit" name="min-mile-min-km-unit" value="min/km">
-        <label for="min-mile-min-km-km-unit">min/km</label>
-    
-        <p id="min-mile-min-km-result-area">Result: <span id="min-mile-min-km-result-value">-</span></p>
-    </div>
-    
-    <!-- Pace event handlers -->
-    <script>
-        const minMilesMinKmResultValueElement = document.querySelector('#min-mile-min-km-result-value');
-        const updateMinMilesMinKm = () => {
-            const milesKmMinElement = document.querySelector('#min-mile-min-km-input-min');
-            const valueMin = parseFloat(milesKmMinElement.value);
-            const milesKmSecElement = document.querySelector('#min-mile-min-km-input-sec');
-            const valueSec = parseFloat(milesKmSecElement.value) || 0;
-            if (isNaN(valueMin) || isNaN(valueSec)) {
-                minMilesMinKmResultValueElement.innerText = 'Invalid number';
-                return;
-            }
-            const unit = document.querySelector('input[name="min-mile-min-km-unit"]:checked').value;
-            minMilesMinKmResultValueElement.innerText = Pace.convertHuman(valueMin, valueSec, unit);
-        };
+      useEffect(() => {
+        update(value, unit); // set initial
+      });
 
-        document.querySelector('#min-mile-min-km-input-min')
-            .addEventListener('keyup', updateMinMilesMinKm);
-        document.querySelector('#min-mile-min-km-input-sec')
-                .addEventListener('keyup', updateMinMilesMinKm);
+      return (
+        <>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Miles to/from km</h2>
+          <div className="flex items-center space-x-4">
+            <input type="number" className="w-20 p-2 border border-gray-300 rounded" placeholder={defaultValue} onChange={(e) => update(e.target.value, unit)} />
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="distance" value="miles" defaultChecked={unit === "miles"} onChange={() => update(value, "miles")} className="accent-blue-500" />
+                <span>miles</span>
+              </label>
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="distance" value="km" defaultChecked={unit === "km"} onChange={() => update(value, "km")} className="accent-blue-500" />
+                <span>km</span>
+              </label>
+            </div>
+          </div>
+          <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
+        </>
+      )
+    }
 
-        document.querySelectorAll("input[name='min-mile-min-km-unit']")
-            .forEach((element) => element.addEventListener('change', updateMinMilesMinKm));
-    </script>
+    function PaceConverter() {
+      const defaultMin = 8;
+      const defaultSec = 3;
+      const defaultUnit = "min/mile";
+
+      const [valueMin, setValueMin] = useState(defaultMin);
+      const [valueSec, setValueSec] = useState(defaultSec);
+      const [unit, setUnit] = useState(defaultUnit);
+      const [result, setResult] = useState("-");
+
+      const update = (newValueMin, newValueSec, newUnit) => {
+        const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
+        const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
+        setValueMin(vMin);
+        setValueSec(vSec);
+        setUnit(newUnit);
+        setResult(Pace.convertHuman(vMin, vSec, newUnit));
+      };
+
+      useEffect(() => {
+        update(valueMin, valueSec, unit); // set initial
+      });
+
+      return (
+        <>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Pace</h2>
+          <div className="flex items-center space-x-4">
+            <div className="flex space-x-2">
+              <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultMin} onChange={(e) => update(e.target.value, valueSec, unit)} />
+              <span className="pt-[7px]">:</span>
+              <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultSec} onChange={(e) => update(valueMin, e.target.value, unit)} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="pace" value="min/mile" defaultChecked={unit === "min/mile"} onChange={() => update(valueMin, valueSec, "min/mile")} className="accent-blue-500" />
+                <span>min/mile</span>
+              </label>
+              <label className="flex items-center space-x-1">
+                <input type="radio" name="pace" value="min/km" defaultChecked={unit === "min/km"} onChange={() => update(valueMin, valueSec, "min/km")} className="accent-blue-500" />
+                <span>min/km</span>
+              </label>
+            </div>
+          </div>
+          <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
+        </>
+      );
+    }
+
+    function UnitConverter() {
+      return (
+        <>
+          <div className="bg-white p-8 shadow-md rounded-lg w-full min-w-48 max-w-lg">
+            <section className="mb-8">
+              <PaceConverter />
+            </section>
+
+            <hr className="pb-8" />
+
+            <section className="mb-8">
+              <LbsKgConverter />
+            </section>
+
+            <hr className="pb-8" />
+
+            <section className="mb-8">
+              <MilesToKmConverter />
+            </section>
+         </div>
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('app'));
+    root.render(<UnitConverter />);
+  </script>
 </body>
 </html>
