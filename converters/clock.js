@@ -9,9 +9,10 @@ class Clock {
         if (isNaN(seconds)) return;
 
         const fullMinutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
         return {
             minutes: fullMinutes,
-            seconds: seconds - fullMinutes * 60,
+            seconds: remainingSeconds,
         };
     }
 
