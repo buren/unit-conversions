@@ -188,6 +188,58 @@
       );
     }
 
+    function RacePaceConverter() {
+        const defaultHour = 0;
+        const defaultMin = 0;
+        const defaultSec = 0;
+        const [valueHour, setValueHour] = useState(0);
+        const [valueMin, setValueMin] = useState(0);
+        const [valueSec, setValueSec] = useState(0);
+        const [distanceKm, setDistanceKm] = useState(0);
+        const [result, setResult] = useState("-");
+
+        const update = (newValueHour, newValueMin, newValueSec, newDistanceKm) => {
+            const vHour = parseInt(newValueHour === "" ? defaultHour : newValueHour);
+            const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
+            const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
+            setValueHour(vHour);
+            setValueMin(vMin);
+            setValueSec(vSec);
+            setDistanceKm(newDistanceKm);
+
+            if (distanceKm) {
+                setResult(`${Pace.racePace(distanceKm, vHour, vMin, vSec)} min/km`);
+            }
+        };
+
+        return (
+            <>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Race Pace</h2>
+                <div className="flex items-center space-x-4 mb-2">
+                    <div className="space-x-3">
+                        <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseInt(e.target.value))} />
+                    </div>
+                    <div className="space-x-1">
+                        <p>km</p>
+                    </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                    <div className="flex space-x-3 w-76">
+                        <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultHour} onChange={(e) => update(e.target.value, valueMin, valueSec, distanceKm)} />
+                        <span className="pt-[7px]">:</span>
+                        <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultMin} onChange={(e) => update(valueHour, e.target.value, valueSec, distanceKm)} />
+                        <span className="pt-[7px]">:</span>
+                        <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultSec} onChange={(e) => update(valueHour, valueMin, e.target.value, distanceKm)} />
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        <p>hh:mm:ss</p>
+                    </div>
+                </div>
+                <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
+            </>
+        )
+    }
+
     function UnitConverter() {
       const [showExtras, setShowExtras] = useState(false);
 
@@ -196,6 +248,12 @@
           <div className="bg-white p-8 shadow-md rounded-lg w-full min-w-48 max-w-lg">
             <section className="mb-8">
               <PaceConverter />
+            </section>
+
+            <hr className="pb-8" />
+
+            <section className="mb-8">
+              <RacePaceConverter />
             </section>
 
             <hr className="pb-8" />

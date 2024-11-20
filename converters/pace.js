@@ -59,6 +59,34 @@ class Pace {
     return Clock.prettify(time);
   }
 
+  static racePace(distanceKm, hours, minutes, seconds) {
+      if (typeof distanceKm !== 'number' || distanceKm <= 0) {
+          throw new Error('Distance must be a positive number');
+      }
+
+      // Validate the timeObject
+      if (
+          typeof hours !== 'number' || hours < 0 ||
+          typeof minutes !== 'number' || minutes < 0 ||
+          typeof seconds !== 'number' || seconds < 0
+      ) {
+          throw new Error('Time object must contain non-negative numbers for hours, minutes, and seconds');
+      }
+
+      // Convert total time to seconds
+      const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+      // Calculate pace in seconds per kilometer
+      const paceInSeconds = totalSeconds / distanceKm;
+
+      // Convert pace to minutes and seconds
+      const paceMinutes = Math.floor(paceInSeconds / 60);
+      const paceSeconds = Math.round(paceInSeconds % 60);
+
+      return prettifyTimeObject({ hours: 0, minutes: paceMinutes, seconds: paceSeconds });
+  }
+
+
   static paceTable(minutes, seconds, unit, additionalDistancesKm = []) {
     let secondsPerKm;
     if (unit === "min/mile") {
