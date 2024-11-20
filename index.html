@@ -105,11 +105,39 @@
       )
     }
 
+    function PaceTable(props) {
+        const { data: paceTable } = props;
+
+        return (
+            <>
+              <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+                    <table className="min-w-full border-collapse text-left text-sm">
+                    <thead className="bg-gray-200">
+                        <tr>
+                        <th className="px-6 py-3 font-bold text-gray-700 uppercase">Distance</th>
+                        <th className="px-6 py-3 font-bold text-gray-700 uppercase">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-300">
+                        {paceTable.map(([km, time], index) =>
+                            <tr className={index % 2 === 0 ? "bg-white" : "bg-gray-50"} key={index}>
+                                <td className="px-6 py-3 text-gray-900">{roundNumber(km, 0)}k</td>
+                                <td className="px-6 py-3 text-gray-900">{time}</td>
+                            </tr>
+                        )}
+                    </tbody>
+                    </table>
+                </div>
+            </>
+        );
+    }
+
     function PaceConverter() {
       const defaultMin = 5;
       const defaultSec = 0;
       const defaultUnit = "min/km";
 
+      const [isDirty, setIsDirty] = useState(false);
       const [valueMin, setValueMin] = useState(defaultMin);
       const [valueSec, setValueSec] = useState(defaultSec);
       const [unit, setUnit] = useState(defaultUnit);
@@ -117,10 +145,11 @@
       const [paceTable, setPaceTable] = useState([]);
       const [additionalDistance, setAdditionalDistance] = useState(undefined);
 
-      const update = (newValueMin, newValueSec, newUnit, newAdditionalDistance) => {
+      const update = (newValueMin, newValueSec, newUnit, newAdditionalDistance, isDirty = true) => {
         const ad = newAdditionalDistance === undefined ? additionalDistance : newAdditionalDistance;
         const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
         const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
+        setIsDirty(isDirty);
         setValueMin(vMin);
         setValueSec(vSec);
         setUnit(newUnit);
@@ -130,7 +159,7 @@
       };
 
       useEffect(() => {
-        update(valueMin, valueSec, unit); // set initial
+        update(valueMin, valueSec, unit, undefined, false); // set initial
       }, []);
 
       return (
@@ -155,24 +184,11 @@
           </div>
           <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
 
-          <div className="overflow-x-auto bg-white shadow-md rounded-lg mt-8">
-            <table className="min-w-full border-collapse text-left text-sm">
-            <thead className="bg-gray-200">
-                <tr>
-                <th className="px-6 py-3 font-bold text-gray-700 uppercase">Distance</th>
-                <th className="px-6 py-3 font-bold text-gray-700 uppercase">Time</th>
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-300">
-                {paceTable.map(([km, time], index) =>
-                    <tr className={index % 2 === 0 ? "bg-white" : "bg-gray-50"} key={index}>
-                        <td className="px-6 py-3 text-gray-900">{roundNumber(km, 0)}k</td>
-                        <td className="px-6 py-3 text-gray-900">{time}</td>
-                    </tr>
-                )}
-            </tbody>
-            </table>
-          </div>
+          {isDirty && (
+            <div className="mt-8">
+                <PaceTable data={paceTable} />
+            </div>
+          )}
 
           <div className="flex items-center space-x-4 mt-2">
                 <input
@@ -196,6 +212,7 @@
         const [valueMin, setValueMin] = useState(0);
         const [valueSec, setValueSec] = useState(0);
         const [distanceKm, setDistanceKm] = useState(0);
+        const [paceTable, setPaceTable] = useState([]);
         const [result, setResult] = useState("-");
 
         const update = (newValueHour, newValueMin, newValueSec, newDistanceKm) => {
@@ -208,7 +225,10 @@
             setDistanceKm(newDistanceKm);
 
             if (distanceKm) {
-                setResult(`${Pace.racePace(distanceKm, vHour, vMin, vSec)} min/km`);
+                const racePace = Pace.racePace(distanceKm, vHour, vMin, vSec);
+                const [min, sec] = racePace.split(":").map(v => parseInt(v));
+                setResult(`${racePace} min/km`);
+                setPaceTable(Pace.paceTable(min, sec, "min/km"));
             }
         };
 
@@ -216,15 +236,15 @@
             <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Race Pace</h2>
                 <div className="flex items-center space-x-4 mb-2">
-                    <div className="space-x-3">
+                    <div className="flex space-x-3">
                         <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseInt(e.target.value))} />
                     </div>
-                    <div className="space-x-1">
+                    <div className="flex items-center space-x-1">
                         <p>km</p>
                     </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <div className="flex space-x-3 w-76">
+                    <div className="flex space-x-3">
                         <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultHour} onChange={(e) => update(e.target.value, valueMin, valueSec, distanceKm)} />
                         <span className="pt-[7px]">:</span>
                         <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultMin} onChange={(e) => update(valueHour, e.target.value, valueSec, distanceKm)} />
@@ -236,6 +256,12 @@
                     </div>
                 </div>
                 <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
+
+                {paceTable.length > 0 && (
+                    <div className="mt-8">
+                        <PaceTable data={paceTable} />
+                    </div>
+                )}
             </>
         )
     }
