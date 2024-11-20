@@ -224,8 +224,8 @@
             setValueSec(vSec);
             setDistanceKm(newDistanceKm);
 
-            if (distanceKm) {
-                const racePace = Pace.racePace(distanceKm, vHour, vMin, vSec);
+            if (newDistanceKm) {
+                const racePace = Pace.racePace(newDistanceKm, vHour, vMin, vSec);
                 const [min, sec] = racePace.split(":").map(v => parseInt(v));
                 setResult(`${racePace} min/km`);
                 setPaceTable(Pace.paceTable(min, sec, "min/km"));
@@ -236,15 +236,7 @@
             <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Race Pace</h2>
                 <div className="flex items-center space-x-4 mb-2">
-                    <div className="flex space-x-3">
-                        <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseInt(e.target.value))} />
-                    </div>
-                    <div className="flex items-center space-x-1">
-                        <p>km</p>
-                    </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                    <div className="flex space-x-3">
+                    <div className="flex space-x-3 w-76">
                         <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultHour} onChange={(e) => update(e.target.value, valueMin, valueSec, distanceKm)} />
                         <span className="pt-[7px]">:</span>
                         <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultMin} onChange={(e) => update(valueHour, e.target.value, valueSec, distanceKm)} />
@@ -253,6 +245,14 @@
                     </div>
                     <div className="flex items-center space-x-1">
                         <p>hh:mm:ss</p>
+                    </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                    <div className="flex space-x-3 w-76">
+                        <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseInt(e.target.value))} />
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        <p>km</p>
                     </div>
                 </div>
                 <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
