@@ -1,3 +1,27 @@
+const DISTANCES_KM = [5, 10, 15, 21.0975, 42.195, 100, 160.9];
+
+function calculatePaceFromTimeAndDistance(totalSeconds, distanceKm) {
+  if (typeof totalSeconds !== "number" || totalSeconds <= 0) {
+    throw new Error("Total time must be a positive number in seconds");
+  }
+
+  if (typeof distanceKm !== "number" || distanceKm <= 0) {
+    throw new Error("Distance must be a positive number in kilometers");
+  }
+
+  // Calculate pace in seconds per kilometer
+  const paceInSeconds = totalSeconds / distanceKm;
+
+  // Convert pace into minutes and seconds
+  const paceMinutes = Math.floor(paceInSeconds / 60);
+  const paceSeconds = Math.round(paceInSeconds % 60);
+
+  return {
+    minutes: paceMinutes,
+    seconds: paceSeconds,
+  };
+}
+
 function convertSecondsToTimeObject(totalSeconds) {
   if (
     typeof totalSeconds !== "number" ||
@@ -36,7 +60,6 @@ function prettifyTimeObject(timeObject) {
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 }
 
-
 class Pace {
   static convertHuman(minutes, seconds, unit) {
     const conversion = this.#_convert(minutes, seconds, unit);
@@ -60,51 +83,63 @@ class Pace {
   }
 
   static racePace(distanceKm, hours, minutes, seconds) {
-      if (typeof distanceKm !== 'number' || distanceKm <= 0) {
-          throw new Error('Distance must be a positive number');
-      }
+    if (typeof distanceKm !== "number" || distanceKm <= 0) {
+      throw new Error("Distance must be a positive number");
+    }
 
-      // Validate the timeObject
-      if (
-          typeof hours !== 'number' || hours < 0 ||
-          typeof minutes !== 'number' || minutes < 0 ||
-          typeof seconds !== 'number' || seconds < 0
-      ) {
-          throw new Error('Time object must contain non-negative numbers for hours, minutes, and seconds');
-      }
+    // Validate the timeObject
+    if (
+      typeof hours !== "number" ||
+      hours < 0 ||
+      typeof minutes !== "number" ||
+      minutes < 0 ||
+      typeof seconds !== "number" ||
+      seconds < 0
+    ) {
+      throw new Error(
+        "Time object must contain non-negative numbers for hours, minutes, and seconds"
+      );
+    }
 
-      // Convert total time to seconds
-      const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+    // Convert total time to seconds
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-      // Calculate pace in seconds per kilometer
-      const paceInSeconds = totalSeconds / distanceKm;
+    // Calculate pace in seconds per kilometer
+    const paceInSeconds = totalSeconds / distanceKm;
 
-      // Convert pace to minutes and seconds
-      const paceMinutes = Math.floor(paceInSeconds / 60);
-      const paceSeconds = Math.round(paceInSeconds % 60);
+    // Convert pace to minutes and seconds
+    const paceMinutes = Math.floor(paceInSeconds / 60);
+    const paceSeconds = Math.round(paceInSeconds % 60);
 
-      return prettifyTimeObject({ hours: 0, minutes: paceMinutes, seconds: paceSeconds });
+    return prettifyTimeObject({
+      hours: 0,
+      minutes: paceMinutes,
+      seconds: paceSeconds,
+    });
   }
 
+  static paceFromTime(hours, minutes, seconds, additionalDistancesKm = []) {
+    const distancesKm = [...DISTANCES_KM, ...additionalDistancesKm];
+    const totalSeconds = hours * 60 * 60 + minutes * 60 + seconds;
+
+    return distancesKm.map((km) => [
+      km,
+      prettifyTimeObject({
+        hours: 0,
+        ...calculatePaceFromTimeAndDistance(totalSeconds, km),
+      }),
+    ]);
+  }
 
   static paceTable(minutes, seconds, unit, additionalDistancesKm = []) {
     let secondsPerKm;
     if (unit === "min/mile") {
-        const totalSeconds = Clock.minutesAndSecondsToSeconds(minutes, seconds);
-        secondsPerKm = totalSeconds / Distance.oneMileInKm;
+      const totalSeconds = Clock.minutesAndSecondsToSeconds(minutes, seconds);
+      secondsPerKm = totalSeconds / Distance.oneMileInKm;
     } else {
-        secondsPerKm = Clock.minutesAndSecondsToSeconds(minutes, seconds);
+      secondsPerKm = Clock.minutesAndSecondsToSeconds(minutes, seconds);
     }
-    const distancesKm = [
-        5,
-        10,
-        15,
-        21.0975,
-        42.195,
-        100,
-        160.9,
-        ...additionalDistancesKm,
-    ];
+    const distancesKm = [...DISTANCES_KM, ...additionalDistancesKm];
 
     return distancesKm.map((km) => [
       km,
