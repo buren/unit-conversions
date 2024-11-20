@@ -70,6 +70,7 @@ class Pace {
     const distancesKm = [
         5,
         10,
+        15,
         21.0975,
         42.195,
         100,
