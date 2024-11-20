@@ -24,4 +24,8 @@ class Clock {
 
         return `${object.minutes}:${seconds}`;
     }
+
+    static prettifySeconds(seconds) {
+        return Clock.prettify(Clock.secondsToMinutesAndSeconds(seconds));
+    }
 }
