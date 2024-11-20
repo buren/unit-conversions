@@ -133,7 +133,7 @@
     }
 
     function PaceConverter() {
-      const defaultMin = 5;
+      const defaultMin = 0;
       const defaultSec = 0;
       const defaultUnit = "min/km";
 
@@ -145,11 +145,11 @@
       const [paceTable, setPaceTable] = useState([]);
       const [additionalDistance, setAdditionalDistance] = useState(undefined);
 
-      const update = (newValueMin, newValueSec, newUnit, newAdditionalDistance, isDirty = true) => {
+      const update = (newValueMin, newValueSec, newUnit, newAdditionalDistance) => {
         const ad = newAdditionalDistance === undefined ? additionalDistance : newAdditionalDistance;
         const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
         const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
-        setIsDirty(isDirty);
+        setIsDirty(true);
         setValueMin(vMin);
         setValueSec(vSec);
         setUnit(newUnit);
@@ -158,13 +158,9 @@
         setPaceTable(Pace.paceTable(vMin, vSec, newUnit, ad ? [ad] : []));
       };
 
-      useEffect(() => {
-        update(valueMin, valueSec, unit, undefined, false); // set initial
-      }, []);
-
       return (
         <>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Pace</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Pace to race time</h2>
           <div className="flex items-center space-x-4">
             <div className="flex space-x-2">
               <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultMin} onChange={(e) => update(e.target.value, valueSec, unit)} />
@@ -185,21 +181,23 @@
           <p className="mt-4 text-gray-600">Result: <span className="font-semibold">{result}</span></p>
 
           {isDirty && (
-            <div className="mt-8">
-                <PaceTable data={paceTable} />
-            </div>
-          )}
+            <>
+                <div className="mt-8">
+                    <PaceTable data={paceTable} />
+                </div>
 
-          <div className="flex items-center space-x-4 mt-2">
-                <input
-                    type="number"
-                    className="w-full p-2 border border-gray-300 rounded"
-                    placeholder="Additional distance (km)"
-                    onChange={(e) => {
-                        update(valueMin, valueSec, unit, parseInt(e.target.value));
-                    }}
-                />
-            </div>
+                <div className="flex items-center space-x-4 mt-2">
+                    <input
+                        type="number"
+                        className="w-full p-2 border border-gray-300 rounded"
+                        placeholder="Additional distance (km)"
+                        onChange={(e) => {
+                            update(valueMin, valueSec, unit, parseInt(e.target.value));
+                        }}
+                    />
+                </div>
+            </>
+          )}
         </>
       );
     }
@@ -234,7 +232,7 @@
 
         return (
             <>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Race Pace</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Race time to pace</h2>
                 <div className="flex items-center space-x-4 mb-2">
                     <div className="flex space-x-3 w-76">
                         <input type="number" className="w-16 p-2 border border-gray-300 rounded" min="0" placeholder={defaultHour} onChange={(e) => update(e.target.value, valueMin, valueSec, distanceKm)} />
