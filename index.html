@@ -115,7 +115,7 @@
       const [unit, setUnit] = useState(defaultUnit);
       const [result, setResult] = useState("-");
       const [paceTable, setPaceTable] = useState([]);
-      const [additionalDistance, setAdditionalDistance] = useState(null);
+      const [additionalDistance, setAdditionalDistance] = useState(undefined);
 
       const update = (newValueMin, newValueSec, newUnit, newAdditionalDistance) => {
         const ad = newAdditionalDistance === undefined ? additionalDistance : newAdditionalDistance;
@@ -124,6 +124,7 @@
         setValueMin(vMin);
         setValueSec(vSec);
         setUnit(newUnit);
+        setAdditionalDistance(ad);
         setResult(Pace.convertHuman(vMin, vSec, newUnit));
         setPaceTable(Pace.paceTable(vMin, vSec, newUnit, ad ? [ad] : []));
       };
@@ -188,6 +189,8 @@
     }
 
     function UnitConverter() {
+      const [showExtras, setShowExtras] = useState(false);
+
       return (
         <>
           <div className="bg-white p-8 shadow-md rounded-lg w-full min-w-48 max-w-lg">
@@ -197,15 +200,27 @@
 
             <hr className="pb-8" />
 
-            <section className="mb-8">
-              <LbsKgConverter />
-            </section>
+            {!showExtras && (
+                <p>
+                    <a href="#" className="underline underline-offset-2 text-gray-400" onClick={() => setShowExtras(true)}>
+                        Show extras &gt;
+                    </a>
+                </p>
+            )}
 
-            <hr className="pb-8" />
+            {showExtras && (
+                <>
+                    <section className="mb-8">
+                    <LbsKgConverter />
+                    </section>
 
-            <section className="mb-8">
-              <MilesToKmConverter />
-            </section>
+                    <hr className="pb-8" />
+
+                    <section className="mb-8">
+                    <MilesToKmConverter />
+                    </section>
+                </>
+            )}
          </div>
         </>
       );
