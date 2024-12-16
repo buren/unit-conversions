@@ -1,5 +1,6 @@
 class Distance {
     static oneMileInKm = 1.609;
+    static oneMileInM = 1609;
 
     static convertHuman(value, unit, digits = 2) {
         const conversion = this.#_convert(value, unit);

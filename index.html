@@ -121,7 +121,7 @@
                     <tbody className="divide-y divide-gray-300">
                         {paceTable.map(([km, time], index) =>
                             <tr className={index % 2 === 0 ? "bg-white" : "bg-gray-50"} key={index}>
-                                <td className="px-6 py-3 text-gray-900">{roundNumber(km, 0)}k</td>
+                                <td className="px-6 py-3 text-gray-900">{roundNumber(km, 2)}k</td>
                                 <td className="px-6 py-3 text-gray-900">{time}</td>
                             </tr>
                         )}
@@ -149,13 +149,14 @@
         const ad = newAdditionalDistance === undefined ? additionalDistance : newAdditionalDistance;
         const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
         const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
+        const adM = ad ? ad * 1000 : ad;
         setIsDirty(true);
         setValueMin(vMin);
         setValueSec(vSec);
         setUnit(newUnit);
-        setAdditionalDistance(ad);
+        setAdditionalDistance(adM);
         setResult(Pace.convertHuman(vMin, vSec, newUnit));
-        setPaceTable(Pace.paceTable(vMin, vSec, newUnit, ad ? [ad] : []));
+        setPaceTable(Pace.paceTable(vMin, vSec, newUnit, adM ? [adM] : []));
       };
 
       return (
@@ -192,7 +193,7 @@
                         className="w-full p-2 border border-gray-300 rounded"
                         placeholder="Additional distance (km)"
                         onChange={(e) => {
-                            update(valueMin, valueSec, unit, parseInt(e.target.value));
+                            update(valueMin, valueSec, unit, parseFloat(e.target.value));
                         }}
                     />
                 </div>
@@ -220,20 +221,21 @@
             const vMin = parseInt(newValueMin === "" ? defaultMin : newValueMin);
             const vSec = parseInt(newValueSec === "" ? defaultSec : newValueSec);
             const ad = newAdditionalDistance === undefined ? additionalDistance : newAdditionalDistance;
+            const adM = ad ? ad * 1000 : ad;
             setValueHour(vHour);
             setValueMin(vMin);
             setValueSec(vSec);
             setDistanceKm(newDistanceKm);
-            setAdditionalDistance(ad);
+            setAdditionalDistance(adM);
 
             if (newDistanceKm) {
-                const racePace = Pace.racePace(newDistanceKm, vHour, vMin, vSec);
+                const racePace = Pace.racePace(newDistanceKm * 1000, vHour, vMin, vSec);
                 const [min, sec] = racePace.split(":").map(v => parseInt(v));
                 setResult(`${racePace} min/km`);
                 setPaceTableTitle("Time")
-                setPaceTable(Pace.paceTable(min, sec, "min/km", ad ? [ad] : []));
+                setPaceTable(Pace.paceTable(min, sec, "min/km", adM ? [adM] : []));
             } else {
-                const paces = Pace.paceFromTime(vHour, vMin, vSec, ad ? [ad] : []);
+                const paces = Pace.paceFromTime(vHour, vMin, vSec, adM ? [adM] : []);
                 setResult("-")
                 setPaceTableTitle("min/km")
                 setPaceTable(paces);
@@ -257,7 +259,7 @@
                 </div>
                 <div className="flex items-center space-x-4">
                     <div className="flex space-x-3 w-76">
-                        <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseInt(e.target.value))} />
+                        <input type="number" className="w-full p-2 border border-gray-300 rounded" min="0" placeholder="Distance (km)" onChange={(e) => update(valueHour, valueMin, valueSec, parseFloat(e.target.value))} />
                     </div>
                     <div className="flex items-center space-x-1">
                         <p>km</p>
@@ -277,7 +279,7 @@
                                 className="w-full p-2 border border-gray-300 rounded"
                                 placeholder="Additional distance (km)"
                                 onChange={(e) => {
-                                    update(valueHour, valueMin, valueSec, distanceKm, parseInt(e.target.value));
+                                    update(valueHour, valueMin, valueSec, distanceKm, parseFloat(e.target.value));
                                 }}
                             />
                         </div>
