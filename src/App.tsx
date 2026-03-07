@@ -92,7 +92,7 @@ export default function App() {
           </button>
         </div>
 
-        {tab === "pace-to-time" ? (
+        <div className={tab === "pace-to-time" ? "" : "hidden"}>
           <PaceToTime
             initialMinutes={initial.paceMin}
             initialSeconds={initial.paceSec}
@@ -109,7 +109,8 @@ export default function App() {
               })
             }
           />
-        ) : (
+        </div>
+        <div className={tab === "time-to-pace" ? "" : "hidden"}>
           <TimeToPace
             initialHours={initial.hours}
             initialMinutes={initial.minutes}
@@ -126,7 +127,7 @@ export default function App() {
               })
             }
           />
-        )}
+        </div>
       </div>
     </div>
   );

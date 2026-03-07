@@ -129,6 +129,7 @@ export default function TimeToPace({
               placeholder="0"
               value={seconds || ""}
               onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
+              onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
             />
           </div>
           <span className="text-sm text-gray-500">hh:mm:ss</span>
