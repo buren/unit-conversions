@@ -97,13 +97,12 @@ export default function TimeToPace({
 
   return (
     <section>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Time to pace</h2>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
         <div className="flex items-center gap-2">
-          <div className="flex space-x-3">
+          <div className="flex space-x-2">
             <input
               type="number"
-              className={`w-16 p-2 border rounded transition-colors duration-300 ${
+              className={`w-18 p-2.5 text-base border rounded-lg transition-colors duration-300 ${
                 hourFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
               min="0"
@@ -111,10 +110,10 @@ export default function TimeToPace({
               value={hours || ""}
               onChange={(e) => setHours(parseInt(e.target.value) || 0)}
             />
-            <span className="pt-[7px]">:</span>
+            <span className="pt-2 text-lg">:</span>
             <input
               type="number"
-              className={`w-16 p-2 border rounded transition-colors duration-300 ${
+              className={`w-18 p-2.5 text-base border rounded-lg transition-colors duration-300 ${
                 minFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
               min="0"
@@ -122,10 +121,10 @@ export default function TimeToPace({
               value={minutes || ""}
               onChange={(e) => handleMinutesChange(parseInt(e.target.value) || 0)}
             />
-            <span className="pt-[7px]">:</span>
+            <span className="pt-2 text-lg">:</span>
             <input
               type="number"
-              className="w-16 p-2 border border-gray-300 rounded"
+              className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
               min="0"
               placeholder="0"
               value={seconds || ""}
@@ -138,7 +137,7 @@ export default function TimeToPace({
       <div className="flex items-center gap-2">
         <input
           type="number"
-          className="w-full max-w-48 p-2 border border-gray-300 rounded"
+          className="w-full max-w-48 p-2.5 text-base border border-gray-300 rounded-lg"
           min="0"
           placeholder="Distance (km)"
           value={distanceKm ?? ""}

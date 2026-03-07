@@ -71,7 +71,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setTab("pace-to-time")}
-            className={`px-4 py-2 -mb-px text-sm font-medium transition-colors ${
+            className={`px-4 py-3 -mb-px text-sm sm:text-base font-medium transition-colors ${
               tab === "pace-to-time"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500 hover:text-gray-700"
@@ -82,7 +82,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setTab("time-to-pace")}
-            className={`px-4 py-2 -mb-px text-sm font-medium transition-colors ${
+            className={`px-4 py-3 -mb-px text-sm sm:text-base font-medium transition-colors ${
               tab === "time-to-pace"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500 hover:text-gray-700"

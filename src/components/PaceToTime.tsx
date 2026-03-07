@@ -91,13 +91,28 @@ export default function PaceToTime({
 
   return (
     <section>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Pace to time</h2>
+      <div className="inline-flex rounded-lg border border-gray-300 mb-4">
+        {(["min/mile", "min/km", "km/h"] as const).map((u) => (
+          <button
+            key={u}
+            type="button"
+            onClick={() => setUnit(u)}
+            className={`px-4 py-2 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+              unit === u
+                ? "bg-blue-500 text-white"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {u}
+          </button>
+        ))}
+      </div>
       <div className="flex flex-wrap items-center gap-4">
         {isSpeed ? (
           <div className="flex items-center gap-2">
             <input
               type="number"
-              className="w-24 p-2 border border-gray-300 rounded"
+              className="w-24 p-2.5 text-base border border-gray-300 rounded-lg"
               min="0"
               step="0.1"
               placeholder="0"
@@ -115,7 +130,7 @@ export default function PaceToTime({
               <input
                 ref={minInputRef}
                 type="number"
-                className={`w-16 p-2 border rounded transition-colors duration-300 ${
+                className={`w-18 p-2.5 text-base border rounded-lg transition-colors duration-300 ${
                   minFlash
                     ? "border-amber-400 bg-amber-50"
                     : "border-gray-300"
@@ -128,10 +143,10 @@ export default function PaceToTime({
                   setDirty(true);
                 }}
               />
-              <span className="pt-[7px]">:</span>
+              <span className="pt-2 text-lg">:</span>
               <input
                 type="number"
-                className="w-16 p-2 border border-gray-300 rounded"
+                className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
                 min="0"
                 placeholder="0"
                 value={seconds || ""}
@@ -141,21 +156,6 @@ export default function PaceToTime({
             <span className="text-sm text-gray-500">mm:ss</span>
           </div>
         )}
-        <div className="flex items-center gap-2">
-          {(["min/mile", "min/km", "km/h"] as const).map((u) => (
-            <label key={u} className="flex items-center space-x-1">
-              <input
-                type="radio"
-                name="pace-unit"
-                value={u}
-                checked={unit === u}
-                onChange={() => setUnit(u)}
-                className="accent-blue-500"
-              />
-              <span>{u}</span>
-            </label>
-          ))}
-        </div>
       </div>
 
       {isDirty && (
