@@ -106,7 +106,7 @@ export default function TimeToPace({
                 hourFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
               min="0"
-              placeholder="0"
+              placeholder="00"
               value={hours || ""}
               onChange={(e) => setHours(parseInt(e.target.value) || 0)}
             />
@@ -117,7 +117,7 @@ export default function TimeToPace({
                 minFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
               min="0"
-              placeholder="0"
+              placeholder="00"
               value={minutes || ""}
               onChange={(e) => handleMinutesChange(parseInt(e.target.value) || 0)}
             />
@@ -126,7 +126,7 @@ export default function TimeToPace({
               type="number"
               className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
               min="0"
-              placeholder="0"
+              placeholder="00"
               value={seconds || ""}
               onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
               onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}

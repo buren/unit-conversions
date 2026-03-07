@@ -62,6 +62,7 @@ export interface PaceTableRow {
   label: string;
   value: string;
   isCustom: boolean;
+  miles?: number;
 }
 
 /** Given a pace (mm:ss in the given unit), compute finish times for each distance */
@@ -86,6 +87,7 @@ export function paceToTimeTable(
     label,
     value: formatTime(secPerM * meters),
     isCustom,
+    miles: unit === "min/mile" ? meters / 1609 : undefined,
   }));
 }
 

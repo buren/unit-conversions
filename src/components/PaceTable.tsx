@@ -23,12 +23,15 @@ function round(value: number, digits = 2): number {
 export default function PaceTable({ data, title = "Time", showKmh = false }: PaceTableProps) {
   if (data.length === 0) return null;
 
+  const showMiles = data.some((row) => row.miles !== undefined);
+
   return (
     <div className="overflow-x-auto bg-white shadow-md rounded-lg">
       <table className="min-w-full border-collapse text-left text-sm">
         <thead className="bg-gray-200">
           <tr>
             <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">Distance</th>
+            {showMiles && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">Miles</th>}
             <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">{title}</th>
             {showKmh && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">km/h</th>}
           </tr>
@@ -49,6 +52,7 @@ export default function PaceTable({ data, title = "Time", showKmh = false }: Pac
                 {row.label}
                 {row.isCustom && <span className="ml-1.5 text-blue-500 text-xs align-middle">*</span>}
               </td>
+              {showMiles && <td className="px-3 sm:px-6 py-3 text-gray-500">{round(row.miles!, 1)} mi</td>}
               <td className="px-3 sm:px-6 py-3 text-gray-900">{row.value}</td>
               {showKmh && <td className="px-3 sm:px-6 py-3 text-gray-900">{round(paceStringToKmh(row.value), 1)}</td>}
             </tr>

@@ -91,7 +91,7 @@ export default function PaceToTime({
 
   return (
     <section>
-      <div className="inline-flex rounded-lg border border-gray-300 mb-4">
+      <div className="inline-flex rounded-lg border border-gray-300 mb-4 divide-x divide-gray-300">
         {(["min/mile", "min/km", "km/h"] as const).map((u) => (
           <button
             key={u}
@@ -99,7 +99,7 @@ export default function PaceToTime({
             onClick={() => setUnit(u)}
             className={`px-4 py-2 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
               unit === u
-                ? "bg-blue-500 text-white"
+                ? "bg-blue-500 text-white border-blue-500"
                 : "bg-white text-gray-700 hover:bg-gray-50"
             }`}
           >
@@ -115,7 +115,7 @@ export default function PaceToTime({
               className="w-24 p-2.5 text-base border border-gray-300 rounded-lg"
               min="0"
               step="0.1"
-              placeholder="0"
+              placeholder="00"
               value={speed || ""}
               onChange={(e) => {
                 setSpeed(parseFloat(e.target.value) || 0);
@@ -137,7 +137,7 @@ export default function PaceToTime({
                     : "border-gray-300"
                 }`}
                 min="0"
-                placeholder="0"
+                placeholder="00"
                 value={minutes || ""}
                 onChange={(e) => {
                   setMinutes(parseInt(e.target.value) || 0);
@@ -149,7 +149,7 @@ export default function PaceToTime({
                 type="number"
                 className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
                 min="0"
-                placeholder="0"
+                placeholder="00"
                 value={seconds || ""}
                 onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
                 onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
