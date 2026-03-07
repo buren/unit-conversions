@@ -1,5 +1,4 @@
 import type { PaceTableRow } from "../lib/pace";
-import { paceToKmh } from "../lib/pace";
 
 interface PaceTableProps {
   data: PaceTableRow[];

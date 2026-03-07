@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { racePace, paceToTimeTable, timeToPaceTable, paceToKmh, kmToMilePace } from "../lib/pace";
 import PaceTable from "./PaceTable";
 
@@ -80,8 +80,6 @@ export default function TimeToPace({
     tableTitle = "min/km";
     table = timeToPaceTable(hours, minutes, seconds, extraM);
   }
-
-  const hasInput = hours > 0 || minutes > 0 || seconds > 0;
 
   function addDistance() {
     const km = parseFloat(distanceInput);
