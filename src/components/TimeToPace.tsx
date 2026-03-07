@@ -1,90 +1,201 @@
-import { useState } from "react";
-import { racePace, paceToTimeTable, timeToPaceTable } from "../lib/pace";
+import { useState, useEffect, useRef } from "react";
+import { racePace, paceToTimeTable, timeToPaceTable, paceToKmh, kmToMilePace } from "../lib/pace";
 import PaceTable from "./PaceTable";
 
-export default function TimeToPace() {
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [distanceKm, setDistanceKm] = useState<number | null>(null);
-  const [additionalKm, setAdditionalKm] = useState<number | null>(null);
+function round(value: number, digits = 2): number {
+  return parseFloat(value.toFixed(digits));
+}
 
-  const extraM = additionalKm ? [additionalKm * 1000] : [];
+interface TimeToPaceProps {
+  initialHours?: number;
+  initialMinutes?: number;
+  initialSeconds?: number;
+  initialDistanceKm?: number | null;
+  initialCustomDistances?: number[];
+  onStateChange?: (state: { hours: number; minutes: number; seconds: number; distanceKm: number | null; distances: number[] }) => void;
+}
 
-  let result = "-";
+export default function TimeToPace({
+  initialHours = 0,
+  initialMinutes = 0,
+  initialSeconds = 0,
+  initialDistanceKm = null,
+  initialCustomDistances = [],
+  onStateChange,
+}: TimeToPaceProps) {
+  const [hours, setHours] = useState(initialHours);
+  const [minutes, setMinutes] = useState(initialMinutes);
+  const [seconds, setSeconds] = useState(initialSeconds);
+  const [distanceKm, setDistanceKm] = useState<number | null>(initialDistanceKm);
+  const [customDistances, setCustomDistances] = useState<number[]>(initialCustomDistances);
+  const [distanceInput, setDistanceInput] = useState("");
+  const [minFlash, setMinFlash] = useState(false);
+  const [hourFlash, setHourFlash] = useState(false);
+
+  useEffect(() => {
+    onStateChange?.({ hours, minutes, seconds, distanceKm, distances: customDistances });
+  }, [hours, minutes, seconds, distanceKm, customDistances]);
+
+  const extraM = customDistances.map((km) => km * 1000);
+
+  function handleSecondsChange(value: number) {
+    if (value >= 60) {
+      const extraMin = Math.floor(value / 60);
+      const remainSec = value % 60;
+      setSeconds(remainSec);
+      handleMinutesChange(minutes + extraMin);
+      setMinFlash(true);
+      setTimeout(() => setMinFlash(false), 600);
+    } else {
+      setSeconds(value);
+    }
+  }
+
+  function handleMinutesChange(value: number) {
+    if (value >= 60) {
+      const extraHour = Math.floor(value / 60);
+      const remainMin = value % 60;
+      setMinutes(remainMin);
+      setHours((prev) => prev + extraHour);
+      setHourFlash(true);
+      setTimeout(() => setHourFlash(false), 600);
+    } else {
+      setMinutes(value);
+    }
+  }
+
+  let result: string | null = null;
   let tableTitle = "Time";
-  let table: [number, string][] = [];
+  let table: ReturnType<typeof timeToPaceTable> = [];
 
   if (distanceKm) {
     const pace = racePace(distanceKm * 1000, hours, minutes, seconds);
-    result = `${pace} min/km`;
-    tableTitle = "Time";
     const [m, s] = pace.split(":").map((v) => parseInt(v));
+    const milePace = kmToMilePace(m, s);
+    const kmh = paceToKmh(m, s);
+    result = `${pace} min/km · ${milePace} min/mile · ${round(kmh, 1)} km/h`;
+    tableTitle = "Time";
     table = paceToTimeTable(m, s, "min/km", extraM);
-  } else {
+  } else if (hours > 0 || minutes > 0 || seconds > 0) {
     tableTitle = "min/km";
     table = timeToPaceTable(hours, minutes, seconds, extraM);
+  }
+
+  const hasInput = hours > 0 || minutes > 0 || seconds > 0;
+
+  function addDistance() {
+    const km = parseFloat(distanceInput);
+    if (km > 0 && !customDistances.includes(km)) {
+      setCustomDistances((prev) => [...prev, km]);
+      setDistanceInput("");
+    }
+  }
+
+  function removeDistance(km: number) {
+    setCustomDistances((prev) => prev.filter((d) => d !== km));
   }
 
   return (
     <section>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Time to pace</h2>
-      <div className="flex items-center space-x-4 mb-2">
-        <div className="flex space-x-3 w-76">
-          <input
-            type="number"
-            className="w-16 p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="0"
-            onChange={(e) => setHours(parseInt(e.target.value) || 0)}
-          />
-          <span className="pt-[7px]">:</span>
-          <input
-            type="number"
-            className="w-16 p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="0"
-            onChange={(e) => setMinutes(parseInt(e.target.value) || 0)}
-          />
-          <span className="pt-[7px]">:</span>
-          <input
-            type="number"
-            className="w-16 p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="0"
-            onChange={(e) => setSeconds(parseInt(e.target.value) || 0)}
-          />
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
+        <div className="flex items-center gap-2">
+          <div className="flex space-x-3">
+            <input
+              type="number"
+              className={`w-16 p-2 border rounded transition-colors duration-300 ${
+                hourFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
+              }`}
+              min="0"
+              placeholder="0"
+              value={hours || ""}
+              onChange={(e) => setHours(parseInt(e.target.value) || 0)}
+            />
+            <span className="pt-[7px]">:</span>
+            <input
+              type="number"
+              className={`w-16 p-2 border rounded transition-colors duration-300 ${
+                minFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
+              }`}
+              min="0"
+              placeholder="0"
+              value={minutes || ""}
+              onChange={(e) => handleMinutesChange(parseInt(e.target.value) || 0)}
+            />
+            <span className="pt-[7px]">:</span>
+            <input
+              type="number"
+              className="w-16 p-2 border border-gray-300 rounded"
+              min="0"
+              placeholder="0"
+              value={seconds || ""}
+              onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
+            />
+          </div>
+          <span className="text-sm text-gray-500">hh:mm:ss</span>
         </div>
-        <p>hh:mm:ss</p>
       </div>
-      <div className="flex items-center space-x-4">
-        <div className="flex space-x-3 w-76">
-          <input
-            type="number"
-            className="w-full p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="Distance (km)"
-            onChange={(e) => setDistanceKm(parseFloat(e.target.value) || null)}
-          />
-        </div>
-        <p>km</p>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          className="w-full max-w-48 p-2 border border-gray-300 rounded"
+          min="0"
+          placeholder="Distance (km)"
+          value={distanceKm ?? ""}
+          onChange={(e) => setDistanceKm(parseFloat(e.target.value) || null)}
+        />
+        <span className="text-sm text-gray-500">km</span>
       </div>
 
-      <p className="mt-4 text-gray-600">
-        Result: <span className="font-semibold">{result}</span>
-      </p>
+      {result && (
+        <p className="mt-4 text-gray-600">
+          Result: <span className="font-semibold">{result}</span>
+        </p>
+      )}
 
       {table.length > 0 && (
         <>
-          <div className="mt-8">
-            <PaceTable title={tableTitle} data={table} />
+          <div className="mt-6">
+            <PaceTable title={tableTitle} data={table} showKmh={tableTitle === "min/km"} />
           </div>
-          <input
-            type="number"
-            className="w-full p-2 border border-gray-300 rounded mt-2"
-            placeholder="Additional distance (km)"
-            onChange={(e) => setAdditionalKm(parseFloat(e.target.value) || null)}
-          />
+          <div className="flex gap-2 mt-2">
+            <input
+              type="number"
+              className="flex-1 p-2 border border-gray-300 rounded"
+              placeholder="Additional distance (km)"
+              value={distanceInput}
+              onChange={(e) => setDistanceInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addDistance();
+              }}
+            />
+            <button
+              type="button"
+              onClick={addDistance}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+          {customDistances.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {customDistances.map((km) => (
+                <span
+                  key={km}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
+                >
+                  {km}k
+                  <button
+                    type="button"
+                    onClick={() => removeDistance(km)}
+                    className="text-blue-400 hover:text-blue-600"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </>
       )}
     </section>

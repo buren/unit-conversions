@@ -1,87 +1,213 @@
-import { useState } from "react";
-import { convertPace, paceToTimeTable } from "../lib/pace";
+import { useState, useEffect, useRef } from "react";
+import { convertPace, kmhToPace, paceToKmh, paceToTimeTable, kmToMilePace, mileToKmPace, type PaceUnit } from "../lib/pace";
+import { formatPace } from "../lib/time";
 import PaceTable from "./PaceTable";
 
-export default function PaceToTime() {
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [unit, setUnit] = useState<"min/mile" | "min/km">("min/km");
-  const [dirty, setDirty] = useState(false);
-  const [additionalKm, setAdditionalKm] = useState<number | null>(null);
+function round(value: number, digits = 2): number {
+  return parseFloat(value.toFixed(digits));
+}
 
-  const extraM = additionalKm ? [additionalKm * 1000] : [];
-  const converted = dirty ? convertPace(minutes, seconds, unit) : null;
-  const table = dirty ? paceToTimeTable(minutes, seconds, unit, extraM) : [];
+interface PaceToTimeProps {
+  initialMinutes?: number;
+  initialSeconds?: number;
+  initialSpeed?: number;
+  initialUnit?: PaceUnit;
+  initialDistances?: number[];
+  onStateChange?: (state: { minutes: number; seconds: number; speed: number; unit: PaceUnit; distances: number[] }) => void;
+}
 
-  function update(min: number, sec: number, u: "min/mile" | "min/km") {
-    setMinutes(min);
-    setSeconds(sec);
-    setUnit(u);
+export default function PaceToTime({
+  initialMinutes = 0,
+  initialSeconds = 0,
+  initialSpeed = 0,
+  initialUnit = "min/km",
+  initialDistances = [],
+  onStateChange,
+}: PaceToTimeProps) {
+  const [minutes, setMinutes] = useState(initialMinutes);
+  const [seconds, setSeconds] = useState(initialSeconds);
+  const [speed, setSpeed] = useState(initialSpeed);
+  const [unit, setUnit] = useState<PaceUnit>(initialUnit);
+  const [dirty, setDirty] = useState(initialMinutes > 0 || initialSeconds > 0 || initialSpeed > 0);
+  const [customDistances, setCustomDistances] = useState<number[]>(initialDistances);
+  const [distanceInput, setDistanceInput] = useState("");
+  const [minFlash, setMinFlash] = useState(false);
+  const minInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onStateChange?.({ minutes, seconds, speed, unit, distances: customDistances });
+  }, [minutes, seconds, speed, unit, customDistances]);
+
+  const isSpeed = unit === "km/h";
+
+  const paceMin = isSpeed ? kmhToPace(speed).minutes : minutes;
+  const paceSec = isSpeed ? kmhToPace(speed).seconds : seconds;
+  const isDirty = dirty && (isSpeed ? speed > 0 : true);
+
+  const extraM = customDistances.map((km) => km * 1000);
+  const converted = isDirty ? convertPace(paceMin, paceSec, unit) : null;
+  const kmh = isDirty
+    ? unit === "min/mile"
+      ? paceToKmh(...mileToKmPace(paceMin, paceSec).split(":").map(Number) as [number, number])
+      : paceToKmh(paceMin, paceSec)
+    : 0;
+  const table = isDirty ? paceToTimeTable(paceMin, paceSec, isSpeed ? "min/km" : unit, extraM) : [];
+
+  function handleSecondsChange(value: number) {
+    if (value >= 60) {
+      const extraMin = Math.floor(value / 60);
+      const remainSec = value % 60;
+      setMinutes((prev) => prev + extraMin);
+      setSeconds(remainSec);
+      setMinFlash(true);
+      setTimeout(() => setMinFlash(false), 600);
+    } else {
+      setSeconds(value);
+    }
     setDirty(true);
+  }
+
+  function addDistance() {
+    const km = parseFloat(distanceInput);
+    if (km > 0 && !customDistances.includes(km)) {
+      setCustomDistances((prev) => [...prev, km]);
+      setDistanceInput("");
+    }
+  }
+
+  function removeDistance(km: number) {
+    setCustomDistances((prev) => prev.filter((d) => d !== km));
+  }
+
+  let resultText = "-";
+  if (converted) {
+    if (isSpeed) {
+      const milePace = kmToMilePace(paceMin, paceSec);
+      resultText = `${formatPace(paceMin, paceSec)} min/km · ${milePace} min/mile · ${round(speed, 1)} km/h`;
+    } else {
+      resultText = `${converted.result} ${converted.unit} · ${round(kmh, 1)} km/h`;
+    }
   }
 
   return (
     <section>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Pace to time</h2>
-      <div className="flex items-center space-x-4">
-        <div className="flex space-x-2">
-          <input
-            type="number"
-            className="w-16 p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="0"
-            onChange={(e) => update(parseInt(e.target.value) || 0, seconds, unit)}
-          />
-          <span className="pt-[7px]">:</span>
-          <input
-            type="number"
-            className="w-16 p-2 border border-gray-300 rounded"
-            min="0"
-            placeholder="0"
-            onChange={(e) => update(minutes, parseInt(e.target.value) || 0, unit)}
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <label className="flex items-center space-x-1">
+      <div className="flex flex-wrap items-center gap-4">
+        {isSpeed ? (
+          <div className="flex items-center gap-2">
             <input
-              type="radio"
-              name="pace-unit"
-              value="min/mile"
-              checked={unit === "min/mile"}
-              onChange={() => update(minutes, seconds, "min/mile")}
-              className="accent-blue-500"
+              type="number"
+              className="w-24 p-2 border border-gray-300 rounded"
+              min="0"
+              step="0.1"
+              placeholder="0"
+              value={speed || ""}
+              onChange={(e) => {
+                setSpeed(parseFloat(e.target.value) || 0);
+                setDirty(true);
+              }}
             />
-            <span>min/mile</span>
-          </label>
-          <label className="flex items-center space-x-1">
-            <input
-              type="radio"
-              name="pace-unit"
-              value="min/km"
-              checked={unit === "min/km"}
-              onChange={() => update(minutes, seconds, "min/km")}
-              className="accent-blue-500"
-            />
-            <span>min/km</span>
-          </label>
+            <span className="text-sm text-gray-500">km/h</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="flex space-x-2">
+              <input
+                ref={minInputRef}
+                type="number"
+                className={`w-16 p-2 border rounded transition-colors duration-300 ${
+                  minFlash
+                    ? "border-amber-400 bg-amber-50"
+                    : "border-gray-300"
+                }`}
+                min="0"
+                placeholder="0"
+                value={minutes || ""}
+                onChange={(e) => {
+                  setMinutes(parseInt(e.target.value) || 0);
+                  setDirty(true);
+                }}
+              />
+              <span className="pt-[7px]">:</span>
+              <input
+                type="number"
+                className="w-16 p-2 border border-gray-300 rounded"
+                min="0"
+                placeholder="0"
+                value={seconds || ""}
+                onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <span className="text-sm text-gray-500">mm:ss</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          {(["min/mile", "min/km", "km/h"] as const).map((u) => (
+            <label key={u} className="flex items-center space-x-1">
+              <input
+                type="radio"
+                name="pace-unit"
+                value={u}
+                checked={unit === u}
+                onChange={() => setUnit(u)}
+                className="accent-blue-500"
+              />
+              <span>{u}</span>
+            </label>
+          ))}
         </div>
       </div>
 
-      <p className="mt-4 text-gray-600">
-        Result: <span className="font-semibold">{converted ? `${converted.result} ${converted.unit}` : "-"}</span>
-      </p>
+      {isDirty && (
+        <p className="mt-4 text-gray-600">
+          Result:{" "}
+          <span className="font-semibold">{resultText}</span>
+        </p>
+      )}
 
-      {dirty && (
+      {isDirty && (
         <>
-          <div className="mt-8">
+          <div className="mt-6">
             <PaceTable data={table} />
           </div>
-          <input
-            type="number"
-            className="w-full p-2 border border-gray-300 rounded mt-2"
-            placeholder="Additional distance (km)"
-            onChange={(e) => setAdditionalKm(parseFloat(e.target.value) || null)}
-          />
+          <div className="flex gap-2 mt-2">
+            <input
+              type="number"
+              className="flex-1 p-2 border border-gray-300 rounded"
+              placeholder="Additional distance (km)"
+              value={distanceInput}
+              onChange={(e) => setDistanceInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addDistance();
+              }}
+            />
+            <button
+              type="button"
+              onClick={addDistance}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+          {customDistances.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {customDistances.map((km) => (
+                <span
+                  key={km}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
+                >
+                  {km}k
+                  <button
+                    type="button"
+                    onClick={() => removeDistance(km)}
+                    className="text-blue-400 hover:text-blue-600"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
         </>
       )}
     </section>
