@@ -121,7 +121,7 @@ export default function PaceToTime({
                 setSpeed(parseFloat(e.target.value) || 0);
                 setDirty(true);
               }}
-              onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
             />
             <span className="text-sm text-gray-500">km/h</span>
           </div>
@@ -152,7 +152,7 @@ export default function PaceToTime({
                 placeholder="00"
                 value={seconds || ""}
                 onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
-                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
               />
             </div>
             <span className="text-sm text-gray-500">mm:ss</span>

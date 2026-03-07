@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { racePace, paceToTimeTable, timeToPaceTable, paceToKmh, kmToMilePace } from "../lib/pace";
+import { racePace, paceToTimeTable, timeToPaceTable, paceToKmh, kmToMilePace, RACE_DISTANCES } from "../lib/pace";
 import PaceTable from "./PaceTable";
 
 function round(value: number, digits = 2): number {
@@ -75,7 +75,10 @@ export default function TimeToPace({
     const kmh = paceToKmh(m, s);
     result = `${pace} min/km · ${milePace} min/mile · ${round(kmh, 1)} km/h`;
     tableTitle = "Time";
-    table = paceToTimeTable(m, s, "min/km", extraM);
+    const distanceM = distanceKm * 1000;
+    const isStandardDistance = RACE_DISTANCES.some((d) => d.meters === distanceM);
+    const allExtraM = isStandardDistance ? extraM : [distanceM, ...extraM];
+    table = paceToTimeTable(m, s, "min/km", allExtraM);
   } else if (hours > 0 || minutes > 0 || seconds > 0) {
     tableTitle = "min/km";
     table = timeToPaceTable(hours, minutes, seconds, extraM);
@@ -127,7 +130,7 @@ export default function TimeToPace({
               placeholder="00"
               value={seconds || ""}
               onChange={(e) => handleSecondsChange(parseInt(e.target.value) || 0)}
-              onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
             />
           </div>
           <span className="text-sm text-gray-500">hh:mm:ss</span>
