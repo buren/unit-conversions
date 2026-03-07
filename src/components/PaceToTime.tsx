@@ -113,6 +113,7 @@ export default function PaceToTime({
             <input
               type="number"
               className="w-24 p-2.5 text-base border border-gray-300 rounded-lg"
+              inputMode="decimal"
               min="0"
               step="0.1"
               placeholder="00"
@@ -136,6 +137,7 @@ export default function PaceToTime({
                     ? "border-amber-400 bg-amber-50"
                     : "border-gray-300"
                 }`}
+                inputMode="numeric"
                 min="0"
                 placeholder="00"
                 value={minutes || ""}
@@ -148,6 +150,7 @@ export default function PaceToTime({
               <input
                 type="number"
                 className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
+                inputMode="numeric"
                 min="0"
                 placeholder="00"
                 value={seconds || ""}

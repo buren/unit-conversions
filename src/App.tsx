@@ -125,9 +125,8 @@ export default function App() {
         <div className={tab === "vdot" ? "" : "hidden"}>
           <iframe
             src="https://vdoto2.com/calculator/embed"
-            width="100%"
-            height="1600"
-            frameBorder="0"
+            className="w-full border-0"
+            style={{ height: "80vh", minHeight: "600px" }}
             title="VDOT Calculator"
           />
         </div>

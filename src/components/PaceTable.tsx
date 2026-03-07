@@ -4,6 +4,7 @@ interface PaceTableProps {
   data: PaceTableRow[];
   title?: string;
   showKmh?: boolean;
+  highlightKm?: number;
 }
 
 function paceStringToKmh(pace: string): number {
@@ -19,7 +20,7 @@ function round(value: number, digits = 2): number {
   return parseFloat(value.toFixed(digits));
 }
 
-export default function PaceTable({ data, title = "Time", showKmh = false }: PaceTableProps) {
+export default function PaceTable({ data, title = "Time", showKmh = false, highlightKm }: PaceTableProps) {
   if (data.length === 0) return null;
 
   const showMiles = data.some((row) => row.miles !== undefined);
@@ -39,11 +40,13 @@ export default function PaceTable({ data, title = "Time", showKmh = false }: Pac
           {data.map((row, i) => (
             <tr
               className={
-                row.isCustom
-                  ? "bg-blue-50"
-                  : i % 2 === 0
-                    ? "bg-white"
-                    : "bg-gray-50"
+                highlightKm !== undefined && Math.abs(row.km - highlightKm) < 0.01
+                  ? "bg-amber-50 font-medium"
+                  : row.isCustom
+                    ? "bg-blue-50"
+                    : i % 2 === 0
+                      ? "bg-white"
+                      : "bg-gray-50"
               }
               key={`${row.km}-${row.isCustom}`}
             >

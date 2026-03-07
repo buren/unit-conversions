@@ -106,6 +106,7 @@ export default function TimeToPace({
               className={`w-18 p-2.5 text-base border rounded-lg transition-colors duration-300 ${
                 hourFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
+              inputMode="numeric"
               min="0"
               placeholder="00"
               value={hours || ""}
@@ -117,6 +118,7 @@ export default function TimeToPace({
               className={`w-18 p-2.5 text-base border rounded-lg transition-colors duration-300 ${
                 minFlash ? "border-amber-400 bg-amber-50" : "border-gray-300"
               }`}
+              inputMode="numeric"
               min="0"
               placeholder="00"
               value={minutes || ""}
@@ -126,6 +128,7 @@ export default function TimeToPace({
             <input
               type="number"
               className="w-18 p-2.5 text-base border border-gray-300 rounded-lg"
+              inputMode="numeric"
               min="0"
               placeholder="00"
               value={seconds || ""}
@@ -140,6 +143,7 @@ export default function TimeToPace({
         <input
           type="number"
           className="w-full max-w-48 p-2.5 text-base border border-gray-300 rounded-lg"
+          inputMode="decimal"
           min="0"
           placeholder="Distance (km)"
           value={distanceKm ?? ""}
@@ -157,7 +161,7 @@ export default function TimeToPace({
       {table.length > 0 && (
         <>
           <div className="mt-6">
-            <PaceTable title={tableTitle} data={table} showKmh={tableTitle === "min/km"} />
+            <PaceTable title={tableTitle} data={table} showKmh={tableTitle === "min/km"} highlightKm={distanceKm ?? undefined} />
           </div>
           <div className="flex gap-2 mt-2">
             <input
