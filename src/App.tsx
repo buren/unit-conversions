@@ -3,11 +3,12 @@ import PaceToTime from "./components/PaceToTime";
 import TimeToPace from "./components/TimeToPace";
 import type { PaceUnit } from "./lib/pace";
 
-type Tab = "pace-to-time" | "time-to-pace";
+type Tab = "pace-to-time" | "time-to-pace" | "vdot";
 
 function parseUrlState() {
   const params = new URLSearchParams(window.location.search);
-  const tab = (params.get("tab") === "time-to-pace" ? "time-to-pace" : "pace-to-time") as Tab;
+  const rawTab = params.get("tab");
+  const tab = (rawTab === "time-to-pace" || rawTab === "vdot" ? rawTab : "pace-to-time") as Tab;
 
   // Pace to time params
   const paceMin = parseInt(params.get("pm") || "0") || 0;
@@ -58,7 +59,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    const state = tab === "pace-to-time" ? paceState : timeState;
+    const state = tab === "pace-to-time" ? paceState : tab === "time-to-pace" ? timeState : {};
     updateUrl(tab, state);
   }, [tab, paceState, timeState, updateUrl]);
 
@@ -90,6 +91,17 @@ export default function App() {
           >
             Time to pace
           </button>
+          <button
+            type="button"
+            onClick={() => setTab("vdot")}
+            className={`px-4 py-3 -mb-px text-sm sm:text-base font-medium transition-colors ${
+              tab === "vdot"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            VDOT calculator
+          </button>
         </div>
 
         <div className={tab === "pace-to-time" ? "" : "hidden"}>
@@ -108,6 +120,15 @@ export default function App() {
                 pd: s.distances.join(","),
               })
             }
+          />
+        </div>
+        <div className={tab === "vdot" ? "" : "hidden"}>
+          <iframe
+            src="https://vdoto2.com/calculator/embed"
+            width="100%"
+            height="1600"
+            frameBorder="0"
+            title="VDOT Calculator"
           />
         </div>
         <div className={tab === "time-to-pace" ? "" : "hidden"}>
