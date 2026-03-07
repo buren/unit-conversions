@@ -20,7 +20,7 @@ export default function PaceToTime({
   initialMinutes = 0,
   initialSeconds = 0,
   initialSpeed = 0,
-  initialUnit = "min/km",
+  initialUnit = "min/mile",
   initialDistances = [],
   onStateChange,
 }: PaceToTimeProps) {
