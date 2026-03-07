@@ -13,7 +13,7 @@ function parseUrlState() {
   const paceMin = parseInt(params.get("pm") || "0") || 0;
   const paceSec = parseInt(params.get("ps") || "0") || 0;
   const speed = parseFloat(params.get("speed") || "0") || 0;
-  const paceUnit = (params.get("unit") || "min/mile") as PaceUnit;
+  const paceUnit = (params.get("unit") || "min/km") as PaceUnit;
   const paceDistances = (params.get("pd") || "").split(",").map(Number).filter((n) => n > 0);
 
   // Time to pace params
@@ -34,7 +34,7 @@ export default function App() {
     const params = new URLSearchParams();
     if (newTab !== "pace-to-time") params.set("tab", newTab);
     for (const [k, v] of Object.entries(state)) {
-      if (v && v !== "0" && v !== "min/mile") params.set(k, v);
+      if (v && v !== "0" && v !== "min/km") params.set(k, v);
     }
     const search = params.toString();
     const url = search ? `?${search}` : window.location.pathname;
