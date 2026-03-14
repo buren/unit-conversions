@@ -31,6 +31,16 @@ describe("calcStepElevation", () => {
     expect(result.distanceKm).toBe(3);
     expect(result.elevationM).toBe(300); // 1000m * 0.10 * 3
   });
+
+  it("treats 0 reps as 1", () => {
+    const step: WorkoutStep = {
+      id: 4, mode: "distance", durationMin: 0, speedKmh: 0,
+      distanceKm: 2, incline: 5, reps: 0,
+    };
+    const result = calcStepElevation(step);
+    expect(result.distanceKm).toBe(2);
+    expect(result.elevationM).toBe(100);
+  });
 });
 
 describe("calcTotalElevation", () => {

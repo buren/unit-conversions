@@ -32,9 +32,10 @@ export function calcStepElevation(step: WorkoutStep): StepResult {
   const distanceKm = calcStepDistance(step);
   const distanceM = distanceKm * 1000;
   const elevationM = distanceM * (step.incline / 100);
+  const reps = step.reps || 1;
   return {
-    distanceKm: distanceKm * step.reps,
-    elevationM: elevationM * step.reps,
+    distanceKm: distanceKm * reps,
+    elevationM: elevationM * reps,
   };
 }
 
@@ -58,7 +59,7 @@ export function createStep(): WorkoutStep {
     speedKmh: 0,
     distanceKm: 0,
     incline: 0,
-    reps: 1,
+    reps: 0,
   };
 }
 

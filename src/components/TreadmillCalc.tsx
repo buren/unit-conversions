@@ -125,8 +125,9 @@ export default function TreadmillCalc({ initialSteps, onStateChange }: Treadmill
                 <Field
                   label="Reps"
                   value={step.reps}
-                  onChange={(v) => updateStep(step.id, { reps: Math.max(1, Math.round(v)) })}
+                  onChange={(v) => updateStep(step.id, { reps: Math.round(v) })}
                   min={1}
+                  placeholder="1"
                   inputMode="numeric"
                 />
               </div>
@@ -176,6 +177,7 @@ function Field({
   onChange,
   step = 1,
   min = 0,
+  placeholder = "0",
   inputMode = "numeric",
 }: {
   label: string;
@@ -183,6 +185,7 @@ function Field({
   onChange: (v: number) => void;
   step?: number;
   min?: number;
+  placeholder?: string;
   inputMode?: "numeric" | "decimal";
 }) {
   return (
@@ -194,7 +197,7 @@ function Field({
         inputMode={inputMode}
         min={min}
         step={step}
-        placeholder="0"
+        placeholder={placeholder}
         value={value || ""}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
         onKeyDown={(e) => {
