@@ -5,12 +5,16 @@ import TreadmillCalc from "./components/TreadmillCalc";
 import type { PaceUnit } from "./lib/pace";
 import { parseSteps } from "./lib/treadmill";
 
-type Tab = "pace-to-time" | "time-to-pace" | "vdot" | "treadmill";
+type Tab = "pace-to-time" | "time-to-pace" | "training" | "treadmill";
+type TrainingCalc = "vdot" | "tinman";
 
 function parseUrlState() {
   const params = new URLSearchParams(window.location.search);
   const rawTab = params.get("tab");
-  const tab = (rawTab === "time-to-pace" || rawTab === "vdot" || rawTab === "treadmill" ? rawTab : "pace-to-time") as Tab;
+  const tab = (rawTab === "time-to-pace" || rawTab === "treadmill" ? rawTab
+    : rawTab === "training" || rawTab === "vdot" ? "training"
+    : "pace-to-time") as Tab;
+  const trainingCalc = (params.get("calc") === "tinman" ? "tinman" : "vdot") as TrainingCalc;
 
   // Pace to time params
   const paceMin = parseInt(params.get("pm") || "0") || 0;
@@ -29,7 +33,7 @@ function parseUrlState() {
   // Treadmill params
   const treadmillSteps = parseSteps(params.get("ts") || "");
 
-  return { tab, paceMin, paceSec, speed, paceUnit, paceDistances, hours, minutes, seconds, distanceKm, timeDistances, treadmillSteps };
+  return { tab, trainingCalc, paceMin, paceSec, speed, paceUnit, paceDistances, hours, minutes, seconds, distanceKm, timeDistances, treadmillSteps };
 }
 
 export default function App() {
@@ -64,15 +68,17 @@ export default function App() {
   });
 
   const [treadmillState, setTreadmillState] = useState({ ts: "" });
+  const [trainingCalc, setTrainingCalc] = useState<TrainingCalc>(initial.trainingCalc);
 
   useEffect(() => {
     const state =
       tab === "pace-to-time" ? paceState :
       tab === "time-to-pace" ? timeState :
       tab === "treadmill" ? treadmillState :
-      {};
+      tab === "training" && trainingCalc === "tinman" ? { calc: "tinman" } :
+      {} as Record<string, string>;
     updateUrl(tab, state);
-  }, [tab, paceState, timeState, treadmillState, updateUrl]);
+  }, [tab, paceState, timeState, treadmillState, trainingCalc, updateUrl]);
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -104,14 +110,14 @@ export default function App() {
           </button>
           <button
             type="button"
-            onClick={() => setTab("vdot")}
+            onClick={() => setTab("training")}
             className={`px-4 py-3 -mb-px text-sm sm:text-base font-medium transition-colors ${
-              tab === "vdot"
+              tab === "training"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            VDOT calculator
+            Training paces
           </button>
           <button
             type="button"
@@ -144,13 +150,39 @@ export default function App() {
             }
           />
         </div>
-        <div className={tab === "vdot" ? "" : "hidden"}>
-          <iframe
-            src="https://vdoto2.com/calculator/embed"
-            className="w-full border-0"
-            style={{ height: "80vh", minHeight: "600px" }}
-            title="VDOT Calculator"
-          />
+        <div className={tab === "training" ? "" : "hidden"}>
+          <div className="inline-flex rounded-lg border border-gray-300 mb-4 divide-x divide-gray-300">
+            {(["vdot", "tinman"] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setTrainingCalc(c)}
+                className={`px-4 py-2 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
+                  trainingCalc === c
+                    ? "bg-blue-500 text-white border-blue-500"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {c === "vdot" ? "VDOT" : "Tinman"}
+              </button>
+            ))}
+          </div>
+          <div className={trainingCalc === "vdot" ? "" : "hidden"}>
+            <iframe
+              src="https://vdoto2.com/calculator/embed"
+              className="w-full border-0"
+              style={{ height: "80vh", minHeight: "600px" }}
+              title="VDOT Calculator"
+            />
+          </div>
+          <div className={trainingCalc === "tinman" ? "" : "hidden"}>
+            <iframe
+              src="https://www.finalsurge.com/tinman-calculator"
+              className="w-full border-0"
+              style={{ height: "80vh", minHeight: "600px" }}
+              title="Tinman Calculator"
+            />
+          </div>
         </div>
         <div className={tab === "treadmill" ? "" : "hidden"}>
           <TreadmillCalc
