@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   type WorkoutStep,
-  type StepMode,
   createStep,
   calcStepElevation,
   calcTotalElevation,
