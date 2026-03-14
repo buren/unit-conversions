@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
 import PaceToTime from "./components/PaceToTime";
 import TimeToPace from "./components/TimeToPace";
+import TreadmillCalc from "./components/TreadmillCalc";
 import type { PaceUnit } from "./lib/pace";
+import { parseSteps } from "./lib/treadmill";
 
-type Tab = "pace-to-time" | "time-to-pace" | "vdot";
+type Tab = "pace-to-time" | "time-to-pace" | "vdot" | "treadmill";
 
 function parseUrlState() {
   const params = new URLSearchParams(window.location.search);
   const rawTab = params.get("tab");
-  const tab = (rawTab === "time-to-pace" || rawTab === "vdot" ? rawTab : "pace-to-time") as Tab;
+  const tab = (rawTab === "time-to-pace" || rawTab === "vdot" || rawTab === "treadmill" ? rawTab : "pace-to-time") as Tab;
 
   // Pace to time params
   const paceMin = parseInt(params.get("pm") || "0") || 0;
@@ -24,7 +26,10 @@ function parseUrlState() {
   const distanceKm = parseFloat(params.get("d") || "") || null;
   const timeDistances = (params.get("td") || "").split(",").map(Number).filter((n) => n > 0);
 
-  return { tab, paceMin, paceSec, speed, paceUnit, paceDistances, hours, minutes, seconds, distanceKm, timeDistances };
+  // Treadmill params
+  const treadmillSteps = parseSteps(params.get("ts") || "");
+
+  return { tab, paceMin, paceSec, speed, paceUnit, paceDistances, hours, minutes, seconds, distanceKm, timeDistances, treadmillSteps };
 }
 
 export default function App() {
@@ -58,10 +63,16 @@ export default function App() {
     td: initial.timeDistances.join(","),
   });
 
+  const [treadmillState, setTreadmillState] = useState({ ts: "" });
+
   useEffect(() => {
-    const state = tab === "pace-to-time" ? paceState : tab === "time-to-pace" ? timeState : {};
+    const state =
+      tab === "pace-to-time" ? paceState :
+      tab === "time-to-pace" ? timeState :
+      tab === "treadmill" ? treadmillState :
+      {};
     updateUrl(tab, state);
-  }, [tab, paceState, timeState, updateUrl]);
+  }, [tab, paceState, timeState, treadmillState, updateUrl]);
 
   return (
     <div className="bg-gray-100 min-h-screen flex items-center justify-center p-4">
@@ -102,6 +113,17 @@ export default function App() {
           >
             VDOT calculator
           </button>
+          <button
+            type="button"
+            onClick={() => setTab("treadmill")}
+            className={`px-4 py-3 -mb-px text-sm sm:text-base font-medium transition-colors ${
+              tab === "treadmill"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Treadmill
+          </button>
         </div>
 
         <div className={tab === "pace-to-time" ? "" : "hidden"}>
@@ -128,6 +150,12 @@ export default function App() {
             className="w-full border-0"
             style={{ height: "80vh", minHeight: "600px" }}
             title="VDOT Calculator"
+          />
+        </div>
+        <div className={tab === "treadmill" ? "" : "hidden"}>
+          <TreadmillCalc
+            initialSteps={initial.treadmillSteps}
+            onStateChange={setTreadmillState}
           />
         </div>
         <div className={tab === "time-to-pace" ? "" : "hidden"}>
