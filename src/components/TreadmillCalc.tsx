@@ -36,21 +36,20 @@ export default function TreadmillCalc({ initialSteps, onStateChange }: Treadmill
   }
 
   const totals = calcTotalElevation(steps);
-  const hasInput = steps.some(
-    (s) =>
-      (s.mode === "duration" ? s.durationMin > 0 && s.speedKmh > 0 : s.distanceKm > 0) &&
-      s.incline > 0,
+  const hasDistance = steps.some((s) =>
+    s.mode === "duration" ? s.durationMin > 0 && s.speedKmh > 0 : s.distanceKm > 0,
   );
+  const hasElevation = totals.totalElevationM > 0;
 
   return (
     <section>
       <div className="space-y-4">
         {steps.map((step, i) => {
           const result = calcStepElevation(step);
-          const stepHasInput =
-            (step.mode === "duration"
+          const stepHasDistance =
+            step.mode === "duration"
               ? step.durationMin > 0 && step.speedKmh > 0
-              : step.distanceKm > 0) && step.incline > 0;
+              : step.distanceKm > 0;
 
           return (
             <div key={step.id} className="border border-gray-200 rounded-lg p-4">
@@ -132,12 +131,19 @@ export default function TreadmillCalc({ initialSteps, onStateChange }: Treadmill
                 />
               </div>
 
-              {stepHasInput && (
+              {stepHasDistance && (
                 <p className="mt-2 text-sm text-gray-500">
-                  {result.distanceKm.toFixed(2)} km &middot;{" "}
                   <span className="font-medium text-gray-700">
-                    +{result.elevationM.toFixed(0)}m
+                    {result.distanceKm.toFixed(2)} km
                   </span>
+                  {step.incline > 0 && (
+                    <>
+                      {" "}&middot;{" "}
+                      <span className="font-medium text-gray-700">
+                        +{result.elevationM.toFixed(0)}m
+                      </span>
+                    </>
+                  )}
                   {step.reps > 1 && (
                     <span className="text-gray-400"> ({step.reps} &times;)</span>
                   )}
@@ -156,15 +162,17 @@ export default function TreadmillCalc({ initialSteps, onStateChange }: Treadmill
         + Add step
       </button>
 
-      {hasInput && (
+      {hasDistance && (
         <div className="mt-5 p-4 bg-blue-50 rounded-lg">
           <div className="text-sm text-gray-600">Total workout</div>
           <div className="text-2xl font-bold text-gray-900">
-            +{totals.totalElevationM.toFixed(0)}m elevation
+            {totals.totalDistanceKm.toFixed(2)} km
           </div>
-          <div className="text-sm text-gray-500 mt-1">
-            {totals.totalDistanceKm.toFixed(2)} km total distance
-          </div>
+          {hasElevation && (
+            <div className="text-sm text-gray-500 mt-1">
+              +{totals.totalElevationM.toFixed(0)}m elevation
+            </div>
+          )}
         </div>
       )}
     </section>
