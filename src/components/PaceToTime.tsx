@@ -51,7 +51,7 @@ export default function PaceToTime({
       ? paceToKmh(...mileToKmPace(paceMin, paceSec).split(":").map(Number) as [number, number])
       : paceToKmh(paceMin, paceSec)
     : 0;
-  const table = isDirty ? paceToTimeTable(paceMin, paceSec, isSpeed ? "min/km" : unit, extraM) : [];
+  const table = paceToTimeTable(paceMin, paceSec, isSpeed ? "min/km" : unit, extraM);
 
   function handleSecondsChange(value: number) {
     if (value >= 60) {
@@ -79,7 +79,7 @@ export default function PaceToTime({
     setCustomDistances((prev) => prev.filter((d) => d !== km));
   }
 
-  let resultText = "-";
+  let resultText = "—";
   if (converted) {
     if (isSpeed) {
       const milePace = kmToMilePace(paceMin, paceSec);
@@ -163,57 +163,51 @@ export default function PaceToTime({
         )}
       </div>
 
-      {isDirty && (
-        <p className="mt-4 text-gray-600">
-          Result:{" "}
-          <span className="font-semibold">{resultText}</span>
-        </p>
-      )}
+      <p className="mt-4 text-gray-600">
+        Result:{" "}
+        <span className="font-semibold">{resultText}</span>
+      </p>
 
-      {isDirty && (
-        <>
-          <div className="mt-6">
-            <PaceTable data={table} />
-          </div>
-          <div className="flex gap-2 mt-2">
-            <input
-              type="number"
-              className="flex-1 p-2 border border-gray-300 rounded"
-              placeholder="Additional distance (km)"
-              value={distanceInput}
-              onChange={(e) => setDistanceInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addDistance();
-              }}
-            />
-            <button
-              type="button"
-              onClick={addDistance}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+      <div className="mt-6">
+        <PaceTable data={table} />
+      </div>
+      <div className="flex gap-2 mt-2">
+        <input
+          type="number"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          placeholder="Additional distance (km)"
+          value={distanceInput}
+          onChange={(e) => setDistanceInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") addDistance();
+          }}
+        />
+        <button
+          type="button"
+          onClick={addDistance}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Add
+        </button>
+      </div>
+      {customDistances.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {customDistances.map((km) => (
+            <span
+              key={km}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
             >
-              Add
-            </button>
-          </div>
-          {customDistances.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {customDistances.map((km) => (
-                <span
-                  key={km}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
-                >
-                  {km}k
-                  <button
-                    type="button"
-                    onClick={() => removeDistance(km)}
-                    className="text-blue-400 hover:text-blue-600"
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </>
+              {km}k
+              <button
+                type="button"
+                onClick={() => removeDistance(km)}
+                className="text-blue-400 hover:text-blue-600"
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
       )}
     </section>
   );

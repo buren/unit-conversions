@@ -65,10 +65,10 @@ export default function TimeToPace({
   }
 
   let result: string | null = null;
-  let tableTitle = "Time";
+  let tableTitle = "min/km";
   let table: ReturnType<typeof timeToPaceTable> = [];
 
-  if (distanceKm) {
+  if (distanceKm && (hours > 0 || minutes > 0 || seconds > 0)) {
     const pace = racePace(distanceKm * 1000, hours, minutes, seconds);
     const [m, s] = pace.split(":").map((v) => parseInt(v));
     const milePace = kmToMilePace(m, s);
@@ -79,8 +79,13 @@ export default function TimeToPace({
     const isStandardDistance = RACE_DISTANCES.some((d) => d.meters === distanceM);
     const allExtraM = isStandardDistance ? extraM : [distanceM, ...extraM];
     table = paceToTimeTable(m, s, "min/km", allExtraM);
-  } else if (hours > 0 || minutes > 0 || seconds > 0) {
-    tableTitle = "min/km";
+  } else if (distanceKm) {
+    tableTitle = "Time";
+    const distanceM = distanceKm * 1000;
+    const isStandardDistance = RACE_DISTANCES.some((d) => d.meters === distanceM);
+    const allExtraM = isStandardDistance ? extraM : [distanceM, ...extraM];
+    table = paceToTimeTable(0, 0, "min/km", allExtraM);
+  } else {
     table = timeToPaceTable(hours, minutes, seconds, extraM);
   }
 
@@ -152,56 +157,50 @@ export default function TimeToPace({
         <span className="text-sm text-gray-500">km</span>
       </div>
 
-      {result && (
-        <p className="mt-4 text-gray-600">
-          Result: <span className="font-semibold">{result}</span>
-        </p>
-      )}
+      <p className="mt-4 text-gray-600">
+        Result: <span className="font-semibold">{result ?? "—"}</span>
+      </p>
 
-      {table.length > 0 && (
-        <>
-          <div className="mt-6">
-            <PaceTable title={tableTitle} data={table} showKmh={tableTitle === "min/km"} highlightKm={distanceKm ?? undefined} />
-          </div>
-          <div className="flex gap-2 mt-2">
-            <input
-              type="number"
-              className="flex-1 p-2 border border-gray-300 rounded"
-              placeholder="Additional distance (km)"
-              value={distanceInput}
-              onChange={(e) => setDistanceInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addDistance();
-              }}
-            />
-            <button
-              type="button"
-              onClick={addDistance}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+      <div className="mt-6">
+        <PaceTable title={tableTitle} data={table} showKmh={tableTitle === "min/km"} highlightKm={distanceKm ?? undefined} />
+      </div>
+      <div className="flex gap-2 mt-2">
+        <input
+          type="number"
+          className="flex-1 p-2 border border-gray-300 rounded"
+          placeholder="Additional distance (km)"
+          value={distanceInput}
+          onChange={(e) => setDistanceInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") addDistance();
+          }}
+        />
+        <button
+          type="button"
+          onClick={addDistance}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Add
+        </button>
+      </div>
+      {customDistances.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {customDistances.map((km) => (
+            <span
+              key={km}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
             >
-              Add
-            </button>
-          </div>
-          {customDistances.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {customDistances.map((km) => (
-                <span
-                  key={km}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-sm rounded"
-                >
-                  {km}k
-                  <button
-                    type="button"
-                    onClick={() => removeDistance(km)}
-                    className="text-blue-400 hover:text-blue-600"
-                  >
-                    &times;
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </>
+              {km}k
+              <button
+                type="button"
+                onClick={() => removeDistance(km)}
+                className="text-blue-400 hover:text-blue-600"
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
       )}
     </section>
   );

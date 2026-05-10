@@ -1,4 +1,4 @@
-import type { PaceTableRow } from "../lib/pace";
+import { EMPTY_VALUE, type PaceTableRow } from "../lib/pace";
 
 interface PaceTableProps {
   data: PaceTableRow[];
@@ -56,7 +56,7 @@ export default function PaceTable({ data, title = "Time", showKmh = false, highl
               </td>
               {showMiles && <td className="px-3 sm:px-6 py-3 text-gray-500">{round(row.miles!, 1)} mi</td>}
               <td className="px-3 sm:px-6 py-3 text-gray-900">{row.value}</td>
-              {showKmh && <td className="px-3 sm:px-6 py-3 text-gray-900">{round(paceStringToKmh(row.value), 1)}</td>}
+              {showKmh && <td className="px-3 sm:px-6 py-3 text-gray-900">{row.value === EMPTY_VALUE ? EMPTY_VALUE : round(paceStringToKmh(row.value), 1)}</td>}
             </tr>
           ))}
         </tbody>

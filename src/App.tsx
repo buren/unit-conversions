@@ -81,8 +81,8 @@ export default function App() {
   }, [tab, paceState, timeState, treadmillState, trainingCalc, updateUrl]);
 
   return (
-    <div className="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white p-4 sm:p-8 shadow-md rounded-lg w-full max-w-lg">
+    <div className="bg-gray-100 min-h-screen flex justify-center px-4 py-8">
+      <div className="bg-white p-4 sm:p-8 shadow-md rounded-lg w-full max-w-lg h-fit">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Running Pace Calculator</h1>
 
         <div className="flex border-b border-gray-200 mb-6">

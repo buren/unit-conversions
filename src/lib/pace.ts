@@ -65,6 +65,8 @@ export interface PaceTableRow {
   miles?: number;
 }
 
+export const EMPTY_VALUE = "—";
+
 /** Given a pace (mm:ss in the given unit), compute finish times for each distance */
 export function paceToTimeTable(
   minutes: number,
@@ -74,6 +76,7 @@ export function paceToTimeTable(
 ): PaceTableRow[] {
   const totalSec = toSeconds(0, minutes, seconds);
   const secPerM = unit === "min/mile" ? totalSec / 1609 : totalSec / 1000;
+  const isEmpty = totalSec <= 0;
 
   const allDistances: { meters: number; label: string; isCustom: boolean }[] = [
     ...RACE_DISTANCES.map((d) => ({ ...d, isCustom: false })),
@@ -85,7 +88,7 @@ export function paceToTimeTable(
   return allDistances.map(({ meters, label, isCustom }) => ({
     km: meters / 1000,
     label,
-    value: formatTime(secPerM * meters),
+    value: isEmpty ? EMPTY_VALUE : formatTime(secPerM * meters),
     isCustom,
     miles: unit === "min/mile" ? meters / 1609 : undefined,
   }));
@@ -108,7 +111,7 @@ export function timeToPaceTable(
   extraDistancesM: number[] = [],
 ): PaceTableRow[] {
   const totalSec = toSeconds(hours, minutes, seconds);
-  if (totalSec <= 0) return [];
+  const isEmpty = totalSec <= 0;
 
   const allDistances: { meters: number; label: string; isCustom: boolean }[] = [
     ...RACE_DISTANCES.map((d) => ({ ...d, isCustom: false })),
@@ -118,6 +121,9 @@ export function timeToPaceTable(
   allDistances.sort((a, b) => a.meters - b.meters);
 
   return allDistances.map(({ meters, label, isCustom }) => {
+    if (isEmpty) {
+      return { km: meters / 1000, label, value: EMPTY_VALUE, isCustom };
+    }
     const secPerKm = totalSec / (meters / 1000);
     const m = Math.floor(secPerKm / 60);
     const s = Math.round(secPerKm % 60);
