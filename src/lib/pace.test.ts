@@ -9,6 +9,7 @@ import {
   timeToPaceTable,
   racePace,
   RACE_DISTANCES,
+  EMPTY_VALUE,
 } from "./pace";
 
 describe("mileToKmPace", () => {
@@ -166,8 +167,10 @@ describe("racePace", () => {
 });
 
 describe("timeToPaceTable", () => {
-  it("returns empty for zero time", () => {
-    expect(timeToPaceTable(0, 0, 0)).toEqual([]);
+  it("returns placeholder rows for zero time", () => {
+    const table = timeToPaceTable(0, 0, 0);
+    expect(table).toHaveLength(RACE_DISTANCES.length);
+    expect(table.every((r) => r.value === EMPTY_VALUE)).toBe(true);
   });
 
   it("returns correct pace for 25 min over standard distances", () => {
