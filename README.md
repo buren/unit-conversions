@@ -5,7 +5,7 @@ A collection of running-related calculators. Installable as a PWA for offline us
 ## Features
 
 ### Pace to time
-Enter a pace (min/km, min/mile, or km/h) and see projected finish times for standard race distances (5k, 10k, half marathon, marathon, 100k, 100 miles). Supports adding custom distances.
+Enter a pace (min/km, min/mile, or km/h) and see projected finish times for standard race distances (5k, 10k, 15k, half marathon, marathon, 50k, 100k, 100 miles). Supports adding custom distances.
 
 ### Time to pace
 Enter a total time and optionally a race distance to calculate required paces. Without a distance, shows the pace needed for each standard distance to finish in the given time.

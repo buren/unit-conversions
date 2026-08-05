@@ -13,6 +13,7 @@ export const RACE_DISTANCES: RaceDistance[] = [
   { meters: 15000, label: "15k" },
   { meters: 21097.5, label: "Half Marathon" },
   { meters: 42195, label: "Marathon" },
+  { meters: 50000, label: "50k" },
   { meters: 100000, label: "100k" },
   { meters: 160900, label: "100 miles" },
 ];
