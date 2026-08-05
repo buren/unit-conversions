@@ -1,4 +1,4 @@
-# Running Pace Calculator
+# Pace Kit
 
 A collection of running-related calculators. Installable as a PWA for offline use.
 

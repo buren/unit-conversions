@@ -12,9 +12,10 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "Running Pace Calculator",
-        short_name: "Pace Calc",
-        description: "Convert between pace, speed, and race finish times",
+        name: "Pace Kit",
+        short_name: "Pace Kit",
+        description:
+          "Running calculators: pace, race finish times, training paces, and treadmill incline",
         theme_color: "#3B82F6",
         background_color: "#F3F4F6",
         display: "standalone",
