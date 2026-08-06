@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { EMPTY_VALUE, formatDelta, type PaceTableRow, type PaceVariant } from "../lib/pace";
 
 interface PaceTableProps {
@@ -8,7 +8,6 @@ interface PaceTableProps {
   highlightKm?: number;
   /** Difference against the unadjusted pace; adds a comparison column when given */
   deltaSecFor?: (row: PaceTableRow) => number;
-  deltaTitle?: string;
   /** Ladder of nearby paces for a row; makes rows expandable when given */
   variantsFor?: (row: PaceTableRow) => PaceVariant[];
 }
@@ -41,7 +40,6 @@ export default function PaceTable({
   showKmh = false,
   highlightKm,
   deltaSecFor,
-  deltaTitle = "Diff",
   variantsFor,
 }: PaceTableProps) {
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
@@ -50,11 +48,6 @@ export default function PaceTable({
 
   const showMiles = data.some((row) => row.miles !== undefined);
   const columnCount = 1 + (showMiles ? 1 : 0) + 1 + (showKmh ? 1 : 0) + (deltaSecFor ? 1 : 0);
-
-  function canExpand(row: PaceTableRow): boolean {
-    if (!variantsFor || row.value === EMPTY_VALUE) return false;
-    return variantsFor(row).length > 0;
-  }
 
   function toggle(row: PaceTableRow) {
     const key = rowKey(row);
@@ -69,102 +62,106 @@ export default function PaceTable({
             <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">Distance</th>
             {showMiles && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">Miles</th>}
             <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">{title}</th>
-            {deltaSecFor && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">{deltaTitle}</th>}
+            {deltaSecFor && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">Diff</th>}
             {showKmh && <th className="px-3 sm:px-6 py-3 font-bold text-gray-700 uppercase">km/h</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-300">
           {data.map((row, i) => {
             const key = rowKey(row);
-            const expandable = canExpand(row);
+            // Every row of a table with a usable pace is expandable, so the ladder
+            // itself is only built for the row actually open.
+            const expandable = variantsFor !== undefined && row.value !== EMPTY_VALUE;
             const expanded = expandable && expandedKey === key;
-            const variants = expanded ? variantsFor!(row) : [];
+            const variants = expanded ? variantsFor(row) : [];
+            const delta = deltaSecFor?.(row);
 
-            return [
-              <tr
-                className={`${
-                  highlightKm !== undefined && Math.abs(row.km - highlightKm) < 0.01
-                    ? "bg-amber-50 font-medium"
-                    : row.isCustom
-                      ? "bg-blue-50"
-                      : i % 2 === 0
-                        ? "bg-white"
-                        : "bg-gray-50"
-                } ${expandable ? "cursor-pointer hover:bg-blue-50/70" : ""}`}
-                key={key}
-                onClick={expandable ? () => toggle(row) : undefined}
-                onKeyDown={
-                  expandable
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          toggle(row);
+            return (
+              <Fragment key={key}>
+                <tr
+                  className={`${
+                    highlightKm !== undefined && Math.abs(row.km - highlightKm) < 0.01
+                      ? "bg-amber-50 font-medium"
+                      : row.isCustom
+                        ? "bg-blue-50"
+                        : i % 2 === 0
+                          ? "bg-white"
+                          : "bg-gray-50"
+                  } ${expandable ? "cursor-pointer hover:bg-blue-50/70" : ""}`}
+                  onClick={expandable ? () => toggle(row) : undefined}
+                  onKeyDown={
+                    expandable
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            toggle(row);
+                          }
                         }
-                      }
-                    : undefined
-                }
-                tabIndex={expandable ? 0 : undefined}
-                role={expandable ? "button" : undefined}
-                aria-expanded={expandable ? expanded : undefined}
-              >
-                <td className="px-3 sm:px-6 py-3 text-gray-900">
-                  {expandable && (
-                    <span
-                      aria-hidden="true"
-                      className={`mr-1.5 inline-block text-xs text-gray-400 transition-transform ${expanded ? "rotate-90" : ""}`}
-                    >
-                      &#9656;
-                    </span>
-                  )}
-                  {row.label}
-                  {row.isCustom && <span className="ml-1.5 text-blue-500 text-xs align-middle">*</span>}
-                </td>
-                {showMiles && <td className="px-3 sm:px-6 py-3 text-gray-500 whitespace-nowrap">{round(row.miles!, 1)} mi</td>}
-                <td className="px-3 sm:px-6 py-3 text-gray-900 whitespace-nowrap">{row.value}</td>
-                {deltaSecFor && (
-                  <td className={`px-3 sm:px-6 py-3 tabular-nums whitespace-nowrap ${deltaClass(deltaSecFor(row))}`}>
-                    {row.value === EMPTY_VALUE ? EMPTY_VALUE : formatDelta(deltaSecFor(row))}
-                  </td>
-                )}
-                {showKmh && (
+                      : undefined
+                  }
+                  tabIndex={expandable ? 0 : undefined}
+                  role={expandable ? "button" : undefined}
+                  aria-expanded={expandable ? expanded : undefined}
+                >
                   <td className="px-3 sm:px-6 py-3 text-gray-900">
-                    {row.value === EMPTY_VALUE ? EMPTY_VALUE : round(paceStringToKmh(row.value), 1)}
+                    {expandable && (
+                      <span
+                        aria-hidden="true"
+                        className={`mr-1.5 inline-block text-xs text-gray-400 transition-transform ${expanded ? "rotate-90" : ""}`}
+                      >
+                        &#9656;
+                      </span>
+                    )}
+                    {row.label}
+                    {row.isCustom && <span className="ml-1.5 text-blue-500 text-xs align-middle">*</span>}
                   </td>
-                )}
-              </tr>,
-              expanded && (
-                <tr key={`${key}-detail`} className="bg-gray-100">
-                  <td colSpan={columnCount} className="px-3 sm:px-6 py-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      {row.label} at nearby paces
-                    </p>
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-xs uppercase text-gray-500">
-                          <th className="py-1 text-left font-semibold">Pace</th>
-                          <th className="py-1 text-left font-semibold">{title}</th>
-                          <th className="py-1 text-left font-semibold">Diff</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {variants.map((v) => (
-                          <tr
-                            key={v.offsetSec}
-                            className={v.isBase ? "font-semibold text-gray-900" : "text-gray-700"}
-                          >
-                            <td className="py-1 tabular-nums">{v.pace}</td>
-                            <td className="py-1 tabular-nums">{v.time}</td>
-                            <td className={`py-1 tabular-nums ${deltaClass(v.deltaSec)}`}>
-                              {formatDelta(v.deltaSec)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </td>
+                  {showMiles && <td className="px-3 sm:px-6 py-3 text-gray-500 whitespace-nowrap">{round(row.miles!, 1)} mi</td>}
+                  <td className="px-3 sm:px-6 py-3 text-gray-900 whitespace-nowrap">{row.value}</td>
+                  {deltaSecFor && (
+                    <td className={`px-3 sm:px-6 py-3 tabular-nums whitespace-nowrap ${deltaClass(delta ?? 0)}`}>
+                      {row.value === EMPTY_VALUE ? EMPTY_VALUE : formatDelta(delta ?? 0)}
+                    </td>
+                  )}
+                  {showKmh && (
+                    <td className="px-3 sm:px-6 py-3 text-gray-900">
+                      {row.value === EMPTY_VALUE ? EMPTY_VALUE : round(paceStringToKmh(row.value), 1)}
+                    </td>
+                  )}
                 </tr>
-              ),
-            ];
+                {expanded && (
+                  <tr className="bg-gray-100">
+                    <td colSpan={columnCount} className="px-3 sm:px-6 py-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        {row.label} at nearby paces
+                      </p>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-xs uppercase text-gray-500">
+                            <th className="py-1 text-left font-semibold">Pace</th>
+                            <th className="py-1 text-left font-semibold">{title}</th>
+                            <th className="py-1 text-left font-semibold">Diff</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {variants.map((v) => (
+                            <tr
+                              key={v.offsetSec}
+                              className={v.offsetSec === 0 ? "font-semibold text-gray-900" : "text-gray-700"}
+                            >
+                              <td className="py-1 tabular-nums">{v.pace}</td>
+                              <td className="py-1 tabular-nums">{v.time}</td>
+                              <td className={`py-1 tabular-nums ${deltaClass(v.deltaSec)}`}>
+                                {formatDelta(v.deltaSec)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
           })}
         </tbody>
       </table>

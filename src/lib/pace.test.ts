@@ -105,7 +105,7 @@ describe("convertPace", () => {
 
 describe("paceToTimeTable", () => {
   it("returns standard race distances sorted", () => {
-    const table = paceToTimeTable(5, 0, "min/km");
+    const table = paceToTimeTable(300, "min/km");
     expect(table.length).toBe(RACE_DISTANCES.length);
     expect(table[0].label).toBe("5k");
     expect(table[0].value).toBe("25:00");
@@ -113,7 +113,7 @@ describe("paceToTimeTable", () => {
   });
 
   it("sorts custom distances correctly", () => {
-    const table = paceToTimeTable(5, 0, "min/km", [8000]);
+    const table = paceToTimeTable(300, "min/km", [8000]);
     expect(table.length).toBe(RACE_DISTANCES.length + 1);
     const labels = table.map((r) => r.label);
     const idx8k = labels.indexOf("8k");
@@ -124,33 +124,33 @@ describe("paceToTimeTable", () => {
   });
 
   it("marks custom distances", () => {
-    const table = paceToTimeTable(5, 0, "min/km", [8000]);
+    const table = paceToTimeTable(300, "min/km", [8000]);
     const custom = table.find((r) => r.label === "8k");
     expect(custom?.isCustom).toBe(true);
     expect(table[0].isCustom).toBe(false);
   });
 
   it("computes correct time for 5k at 5:00/km", () => {
-    const table = paceToTimeTable(5, 0, "min/km");
+    const table = paceToTimeTable(300, "min/km");
     const fiveK = table.find((r) => r.label === "5k");
     expect(fiveK?.value).toBe("25:00");
   });
 
   it("computes correct time for 10k at 5:00/km", () => {
-    const table = paceToTimeTable(5, 0, "min/km");
+    const table = paceToTimeTable(300, "min/km");
     const tenK = table.find((r) => r.label === "10k");
     expect(tenK?.value).toBe("50:00");
   });
 
   it("includes miles column for min/mile", () => {
-    const table = paceToTimeTable(8, 0, "min/mile");
+    const table = paceToTimeTable(480, "min/mile");
     expect(table[0].miles).toBeDefined();
     // 5000m / 1609 = ~3.1 miles
     expect(Math.abs(table[0].miles! - 3.1)).toBeLessThan(0.1);
   });
 
   it("does not include miles for min/km", () => {
-    const table = paceToTimeTable(5, 0, "min/km");
+    const table = paceToTimeTable(300, "min/km");
     expect(table[0].miles).toBeUndefined();
   });
 });
@@ -202,7 +202,7 @@ describe("timeAtPace", () => {
   });
 
   it("agrees with paceToTimeTable", () => {
-    const row = paceToTimeTable(5, 0, "min/km").find((r) => r.label === "Marathon")!;
+    const row = paceToTimeTable(300, "min/km").find((r) => r.label === "Marathon")!;
     expect(formatTime(timeAtPace(42195, 300, "min/km"))).toBe(row.value);
   });
 });
@@ -236,12 +236,12 @@ describe("paceVariants", () => {
     const v = paceVariants(42195, 300, "min/km");
     expect(v).toHaveLength(7);
     expect(v.map((x) => x.pace)).toEqual(["4:45", "4:50", "4:55", "5:00", "5:05", "5:10", "5:15"]);
-    expect(v.filter((x) => x.isBase)).toHaveLength(1);
+    expect(v.filter((x) => x.offsetSec === 0)).toHaveLength(1);
   });
 
   it("reports the base row as no change and moves both ways around it", () => {
     const v = paceVariants(42195, 300, "min/km");
-    const base = v.find((x) => x.isBase)!;
+    const base = v.find((x) => x.offsetSec === 0)!;
     expect(base.deltaSec).toBe(0);
     expect(base.time).toBe("03:30:59");
 
@@ -259,7 +259,7 @@ describe("paceVariants", () => {
       const p = t.split(":").map(Number);
       return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
     };
-    const base = toSec(v.find((x) => x.isBase)!.time);
+    const base = toSec(v.find((x) => x.offsetSec === 0)!.time);
     for (const variant of v) {
       expect(toSec(variant.time) - base).toBe(variant.deltaSec);
     }

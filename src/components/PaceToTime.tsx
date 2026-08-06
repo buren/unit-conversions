@@ -6,7 +6,8 @@ import {
   paceToTimeTable,
   kmToMilePace,
   mileToKmPace,
-  timeAtPace,
+  paceTimeDelta,
+  applyPaceOffset,
   paceVariants,
   formatPaceSeconds,
   type PaceUnit,
@@ -69,25 +70,18 @@ export default function PaceToTime({
     : 0;
   const tableUnit: PaceUnit = isSpeed ? "min/km" : unit;
   const basePaceSec = toSeconds(0, paceMin, paceSec);
-  // Zero stays zero so the table keeps showing placeholders before any input.
-  const effectivePaceSec = basePaceSec > 0 ? Math.max(1, basePaceSec + offset) : 0;
-  const table = paceToTimeTable(
-    Math.floor(effectivePaceSec / 60),
-    effectivePaceSec % 60,
-    tableUnit,
-    extraM,
-  );
+  const effectivePaceSec = applyPaceOffset(basePaceSec, offset);
+  const table = paceToTimeTable(effectivePaceSec, tableUnit, extraM);
 
-  const offsetUnit = tableUnit === "min/mile" ? "s/mile" : "s/km";
   const showWhatIf = isDirty && basePaceSec > 0;
   const deltaSecFor =
-    offset !== 0 && basePaceSec > 0
+    showWhatIf && offset !== 0
       ? (row: PaceTableRow) =>
-          Math.round(timeAtPace(row.km * 1000, effectivePaceSec, tableUnit)) -
-          Math.round(timeAtPace(row.km * 1000, basePaceSec, tableUnit))
+          paceTimeDelta(row.km * 1000, basePaceSec, effectivePaceSec, tableUnit)
       : undefined;
-  const variantsFor = (row: PaceTableRow) =>
-    paceVariants(row.km * 1000, effectivePaceSec, tableUnit);
+  const variantsFor = showWhatIf
+    ? (row: PaceTableRow) => paceVariants(row.km * 1000, effectivePaceSec, tableUnit)
+    : undefined;
 
   function handleSecondsChange(value: number) {
     if (value >= 60) {
@@ -212,7 +206,6 @@ export default function PaceToTime({
           <PaceOffsetSlider
             value={offset}
             onChange={setOffset}
-            offsetUnit={offsetUnit}
             basePace={formatPaceSeconds(basePaceSec)}
             adjustedPace={formatPaceSeconds(effectivePaceSec)}
             paceUnit={tableUnit}

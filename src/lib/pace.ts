@@ -1,7 +1,7 @@
-import { toSeconds, formatTime, formatPace } from "./time";
+import { toSeconds, fromSeconds, formatTime, formatPace } from "./time";
 
-const MILES_TO_KM = 1.609;
 const MILE_METRES = 1609;
+const MILES_TO_KM = MILE_METRES / 1000;
 
 export interface RaceDistance {
   meters: number;
@@ -69,15 +69,13 @@ export interface PaceTableRow {
 
 export const EMPTY_VALUE = "—";
 
-/** Given a pace (mm:ss in the given unit), compute finish times for each distance */
+/** Given a pace in seconds per unit, compute finish times for each distance */
 export function paceToTimeTable(
-  minutes: number,
-  seconds: number,
+  paceSec: number,
   unit: PaceUnit,
   extraDistancesM: number[] = [],
 ): PaceTableRow[] {
-  const totalSec = toSeconds(0, minutes, seconds);
-  const isEmpty = totalSec <= 0;
+  const isEmpty = paceSec <= 0;
 
   const allDistances: { meters: number; label: string; isCustom: boolean }[] = [
     ...RACE_DISTANCES.map((d) => ({ ...d, isCustom: false })),
@@ -89,7 +87,7 @@ export function paceToTimeTable(
   return allDistances.map(({ meters, label, isCustom }) => ({
     km: meters / 1000,
     label,
-    value: isEmpty ? EMPTY_VALUE : formatTime(timeAtPace(meters, totalSec, unit)),
+    value: isEmpty ? EMPTY_VALUE : formatTime(timeAtPace(meters, paceSec, unit)),
     isCustom,
     miles: unit === "min/mile" ? meters / MILE_METRES : undefined,
   }));
@@ -150,14 +148,30 @@ export function formatPaceSeconds(paceSec: number): string {
 export function formatDelta(seconds: number): string {
   const rounded = Math.round(seconds);
   if (rounded === 0) return EMPTY_VALUE;
-  const abs = Math.abs(rounded);
-  const h = Math.floor(abs / 3600);
-  const m = Math.floor((abs % 3600) / 60);
-  const s = abs % 60;
-  const body = h > 0
-    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-    : `${m}:${String(s).padStart(2, "0")}`;
+  const { hours, minutes, seconds: secs } = fromSeconds(Math.abs(rounded));
+  const mm = hours > 0 ? String(minutes).padStart(2, "0") : String(minutes);
+  const body = `${hours > 0 ? `${hours}:` : ""}${mm}:${String(secs).padStart(2, "0")}`;
   return `${rounded > 0 ? "+" : "-"}${body}`;
+}
+
+/**
+ * How much longer (or shorter) a distance takes at one pace than another.
+ * Rounds each time first so the result always equals the difference between the
+ * two times as displayed, rather than being a second out.
+ */
+export function paceTimeDelta(
+  meters: number,
+  fromPaceSec: number,
+  toPaceSec: number,
+  unit: PaceUnit,
+): number {
+  return Math.round(timeAtPace(meters, toPaceSec, unit)) - Math.round(timeAtPace(meters, fromPaceSec, unit));
+}
+
+/** A pace shifted by an offset, held positive. Zero stays zero so callers keep showing placeholders. */
+export function applyPaceOffset(basePaceSec: number, offsetSec: number): number {
+  if (basePaceSec <= 0) return 0;
+  return Math.max(1, basePaceSec + offsetSec);
 }
 
 export interface PaceVariant {
@@ -165,7 +179,6 @@ export interface PaceVariant {
   pace: string;
   time: string;
   deltaSec: number;
-  isBase: boolean;
 }
 
 /**
@@ -181,22 +194,17 @@ export function paceVariants(
   steps = 3,
 ): PaceVariant[] {
   if (basePaceSec <= 0 || meters <= 0) return [];
-  // Round before differencing so the delta always equals the difference between
-  // the two times as displayed, rather than being a second out.
-  const baseTime = Math.round(timeAtPace(meters, basePaceSec, unit));
 
   const variants: PaceVariant[] = [];
   for (let i = -steps; i <= steps; i++) {
     const offsetSec = i * stepSec;
     const paceSec = basePaceSec + offsetSec;
     if (paceSec <= 0) continue;
-    const time = Math.round(timeAtPace(meters, paceSec, unit));
     variants.push({
       offsetSec,
       pace: formatPaceSeconds(paceSec),
-      time: formatTime(time),
-      deltaSec: time - baseTime,
-      isBase: offsetSec === 0,
+      time: formatTime(timeAtPace(meters, paceSec, unit)),
+      deltaSec: paceTimeDelta(meters, basePaceSec, paceSec, unit),
     });
   }
   return variants;

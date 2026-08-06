@@ -1,29 +1,28 @@
+import type { PaceUnit } from "../lib/pace";
+
+const RANGE = 30;
+/** Both the stepper buttons and the slider move in these increments, matching the pace ladder. */
+const STEP = 5;
+
 interface PaceOffsetSliderProps {
   value: number;
   onChange: (value: number) => void;
-  /** "s/km" or "s/mile" — the unit the offset is expressed in */
-  offsetUnit: string;
   /** The pace as entered, e.g. "5:00" */
   basePace: string;
   /** The pace once the offset is applied, e.g. "5:05" */
   adjustedPace: string;
-  /** "min/km" or "min/mile" */
-  paceUnit: string;
-  range?: number;
-  step?: number;
+  paceUnit: PaceUnit;
 }
 
 export default function PaceOffsetSlider({
   value,
   onChange,
-  offsetUnit,
   basePace,
   adjustedPace,
   paceUnit,
-  range = 30,
-  step = 5,
 }: PaceOffsetSliderProps) {
-  const clamp = (v: number) => Math.max(-range, Math.min(range, v));
+  const offsetUnit = paceUnit === "min/mile" ? "s/mile" : "s/km";
+  const clamp = (v: number) => Math.max(-RANGE, Math.min(RANGE, v));
   const signed = value > 0 ? `+${value}` : String(value);
 
   return (
@@ -44,18 +43,18 @@ export default function PaceOffsetSlider({
       <div className="mt-2 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => onChange(clamp(value - step))}
-          disabled={value <= -range}
-          aria-label={`${step} seconds faster`}
+          onClick={() => onChange(clamp(value - STEP))}
+          disabled={value <= -RANGE}
+          aria-label={`${STEP} seconds faster`}
           className="w-9 shrink-0 rounded border border-gray-300 bg-white py-1 text-gray-700 hover:bg-gray-100 disabled:opacity-40"
         >
           &minus;
         </button>
         <input
           type="range"
-          min={-range}
-          max={range}
-          step={1}
+          min={-RANGE}
+          max={RANGE}
+          step={STEP}
           value={value}
           onChange={(e) => onChange(parseInt(e.target.value) || 0)}
           aria-label={`Pace adjustment in ${offsetUnit}`}
@@ -63,9 +62,9 @@ export default function PaceOffsetSlider({
         />
         <button
           type="button"
-          onClick={() => onChange(clamp(value + step))}
-          disabled={value >= range}
-          aria-label={`${step} seconds slower`}
+          onClick={() => onChange(clamp(value + STEP))}
+          disabled={value >= RANGE}
+          aria-label={`${STEP} seconds slower`}
           className="w-9 shrink-0 rounded border border-gray-300 bg-white py-1 text-gray-700 hover:bg-gray-100 disabled:opacity-40"
         >
           +

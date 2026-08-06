@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { racePace, paceToTimeTable, timeToPaceTable, paceToKmh, kmToMilePace, RACE_DISTANCES } from "../lib/pace";
+import { toSeconds } from "../lib/time";
 import PaceTable from "./PaceTable";
 
 function round(value: number, digits = 2): number {
@@ -78,13 +79,13 @@ export default function TimeToPace({
     const distanceM = distanceKm * 1000;
     const isStandardDistance = RACE_DISTANCES.some((d) => d.meters === distanceM);
     const allExtraM = isStandardDistance ? extraM : [distanceM, ...extraM];
-    table = paceToTimeTable(m, s, "min/km", allExtraM);
+    table = paceToTimeTable(toSeconds(0, m, s), "min/km", allExtraM);
   } else if (distanceKm) {
     tableTitle = "Time";
     const distanceM = distanceKm * 1000;
     const isStandardDistance = RACE_DISTANCES.some((d) => d.meters === distanceM);
     const allExtraM = isStandardDistance ? extraM : [distanceM, ...extraM];
-    table = paceToTimeTable(0, 0, "min/km", allExtraM);
+    table = paceToTimeTable(0, "min/km", allExtraM);
   } else {
     table = timeToPaceTable(hours, minutes, seconds, extraM);
   }
