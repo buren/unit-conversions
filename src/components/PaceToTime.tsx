@@ -1,7 +1,20 @@
 import { useState, useEffect, useRef } from "react";
-import { convertPace, kmhToPace, paceToKmh, paceToTimeTable, kmToMilePace, mileToKmPace, type PaceUnit } from "../lib/pace";
-import { formatPace } from "../lib/time";
+import {
+  convertPace,
+  kmhToPace,
+  paceToKmh,
+  paceToTimeTable,
+  kmToMilePace,
+  mileToKmPace,
+  timeAtPace,
+  paceVariants,
+  formatPaceSeconds,
+  type PaceUnit,
+  type PaceTableRow,
+} from "../lib/pace";
+import { formatPace, toSeconds } from "../lib/time";
 import PaceTable from "./PaceTable";
+import PaceOffsetSlider from "./PaceOffsetSlider";
 
 function round(value: number, digits = 2): number {
   return parseFloat(value.toFixed(digits));
@@ -13,7 +26,8 @@ interface PaceToTimeProps {
   initialSpeed?: number;
   initialUnit?: PaceUnit;
   initialDistances?: number[];
-  onStateChange?: (state: { minutes: number; seconds: number; speed: number; unit: PaceUnit; distances: number[] }) => void;
+  initialOffset?: number;
+  onStateChange?: (state: { minutes: number; seconds: number; speed: number; unit: PaceUnit; distances: number[]; offset: number }) => void;
 }
 
 export default function PaceToTime({
@@ -22,6 +36,7 @@ export default function PaceToTime({
   initialSpeed = 0,
   initialUnit = "min/km",
   initialDistances = [],
+  initialOffset = 0,
   onStateChange,
 }: PaceToTimeProps) {
   const [minutes, setMinutes] = useState(initialMinutes);
@@ -32,11 +47,12 @@ export default function PaceToTime({
   const [customDistances, setCustomDistances] = useState<number[]>(initialDistances);
   const [distanceInput, setDistanceInput] = useState("");
   const [minFlash, setMinFlash] = useState(false);
+  const [offset, setOffset] = useState(initialOffset);
   const minInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    onStateChange?.({ minutes, seconds, speed, unit, distances: customDistances });
-  }, [minutes, seconds, speed, unit, customDistances]);
+    onStateChange?.({ minutes, seconds, speed, unit, distances: customDistances, offset });
+  }, [minutes, seconds, speed, unit, customDistances, offset]);
 
   const isSpeed = unit === "km/h";
 
@@ -51,7 +67,27 @@ export default function PaceToTime({
       ? paceToKmh(...mileToKmPace(paceMin, paceSec).split(":").map(Number) as [number, number])
       : paceToKmh(paceMin, paceSec)
     : 0;
-  const table = paceToTimeTable(paceMin, paceSec, isSpeed ? "min/km" : unit, extraM);
+  const tableUnit: PaceUnit = isSpeed ? "min/km" : unit;
+  const basePaceSec = toSeconds(0, paceMin, paceSec);
+  // Zero stays zero so the table keeps showing placeholders before any input.
+  const effectivePaceSec = basePaceSec > 0 ? Math.max(1, basePaceSec + offset) : 0;
+  const table = paceToTimeTable(
+    Math.floor(effectivePaceSec / 60),
+    effectivePaceSec % 60,
+    tableUnit,
+    extraM,
+  );
+
+  const offsetUnit = tableUnit === "min/mile" ? "s/mile" : "s/km";
+  const showWhatIf = isDirty && basePaceSec > 0;
+  const deltaSecFor =
+    offset !== 0 && basePaceSec > 0
+      ? (row: PaceTableRow) =>
+          Math.round(timeAtPace(row.km * 1000, effectivePaceSec, tableUnit)) -
+          Math.round(timeAtPace(row.km * 1000, basePaceSec, tableUnit))
+      : undefined;
+  const variantsFor = (row: PaceTableRow) =>
+    paceVariants(row.km * 1000, effectivePaceSec, tableUnit);
 
   function handleSecondsChange(value: number) {
     if (value >= 60) {
@@ -96,7 +132,10 @@ export default function PaceToTime({
           <button
             key={u}
             type="button"
-            onClick={() => setUnit(u)}
+            onClick={() => {
+              setUnit(u);
+              setOffset(0);
+            }}
             className={`px-4 py-2 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${
               unit === u
                 ? "bg-blue-500 text-white border-blue-500"
@@ -168,8 +207,25 @@ export default function PaceToTime({
         <span className="font-semibold">{resultText}</span>
       </p>
 
+      {showWhatIf && (
+        <div className="mt-6">
+          <PaceOffsetSlider
+            value={offset}
+            onChange={setOffset}
+            offsetUnit={offsetUnit}
+            basePace={formatPaceSeconds(basePaceSec)}
+            adjustedPace={formatPaceSeconds(effectivePaceSec)}
+            paceUnit={tableUnit}
+          />
+        </div>
+      )}
+
       <div className="mt-6">
-        <PaceTable data={table} />
+        <PaceTable
+          data={table}
+          deltaSecFor={deltaSecFor}
+          variantsFor={variantsFor}
+        />
       </div>
       <div className="flex gap-2 mt-2">
         <input

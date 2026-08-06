@@ -22,6 +22,7 @@ function parseUrlState() {
   const speed = parseFloat(params.get("speed") || "0") || 0;
   const paceUnit = (params.get("unit") || "min/km") as PaceUnit;
   const paceDistances = (params.get("pd") || "").split(",").map(Number).filter((n) => n > 0);
+  const paceOffset = parseInt(params.get("po") || "0") || 0;
 
   // Time to pace params
   const hours = parseInt(params.get("h") || "0") || 0;
@@ -33,7 +34,7 @@ function parseUrlState() {
   // Treadmill params
   const treadmillSteps = parseSteps(params.get("ts") || "");
 
-  return { tab, trainingCalc, paceMin, paceSec, speed, paceUnit, paceDistances, hours, minutes, seconds, distanceKm, timeDistances, treadmillSteps };
+  return { tab, trainingCalc, paceMin, paceSec, speed, paceUnit, paceDistances, paceOffset, hours, minutes, seconds, distanceKm, timeDistances, treadmillSteps };
 }
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
     speed: String(initial.speed),
     unit: initial.paceUnit,
     pd: initial.paceDistances.join(","),
+    po: String(initial.paceOffset),
   });
 
   const [timeState, setTimeState] = useState({
@@ -139,6 +141,7 @@ export default function App() {
             initialSpeed={initial.speed}
             initialUnit={initial.paceUnit}
             initialDistances={initial.paceDistances}
+            initialOffset={initial.paceOffset}
             onStateChange={(s) =>
               setPaceState({
                 pm: String(s.minutes),
@@ -146,6 +149,7 @@ export default function App() {
                 speed: String(s.speed),
                 unit: s.unit,
                 pd: s.distances.join(","),
+                po: String(s.offset),
               })
             }
           />

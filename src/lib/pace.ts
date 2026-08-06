@@ -1,6 +1,7 @@
 import { toSeconds, formatTime, formatPace } from "./time";
 
 const MILES_TO_KM = 1.609;
+const MILE_METRES = 1609;
 
 export interface RaceDistance {
   meters: number;
@@ -76,7 +77,6 @@ export function paceToTimeTable(
   extraDistancesM: number[] = [],
 ): PaceTableRow[] {
   const totalSec = toSeconds(0, minutes, seconds);
-  const secPerM = unit === "min/mile" ? totalSec / 1609 : totalSec / 1000;
   const isEmpty = totalSec <= 0;
 
   const allDistances: { meters: number; label: string; isCustom: boolean }[] = [
@@ -89,9 +89,9 @@ export function paceToTimeTable(
   return allDistances.map(({ meters, label, isCustom }) => ({
     km: meters / 1000,
     label,
-    value: isEmpty ? EMPTY_VALUE : formatTime(secPerM * meters),
+    value: isEmpty ? EMPTY_VALUE : formatTime(timeAtPace(meters, totalSec, unit)),
     isCustom,
-    miles: unit === "min/mile" ? meters / 1609 : undefined,
+    miles: unit === "min/mile" ? meters / MILE_METRES : undefined,
   }));
 }
 
@@ -130,4 +130,74 @@ export function timeToPaceTable(
     const s = Math.round(secPerKm % 60);
     return { km: meters / 1000, label, value: formatPace(m, s), isCustom };
   });
+}
+
+/**
+ * Total seconds to cover a distance at a pace given in seconds per unit —
+ * per mile for min/mile, per km otherwise.
+ */
+export function timeAtPace(meters: number, paceSec: number, unit: PaceUnit): number {
+  const secPerM = unit === "min/mile" ? paceSec / MILE_METRES : paceSec / 1000;
+  return secPerM * meters;
+}
+
+export function formatPaceSeconds(paceSec: number): string {
+  const total = Math.round(paceSec);
+  return formatPace(Math.floor(total / 60), total % 60);
+}
+
+/** Signed time difference for a what-if column: "+3:27", "-3:27", or the empty marker at zero. */
+export function formatDelta(seconds: number): string {
+  const rounded = Math.round(seconds);
+  if (rounded === 0) return EMPTY_VALUE;
+  const abs = Math.abs(rounded);
+  const h = Math.floor(abs / 3600);
+  const m = Math.floor((abs % 3600) / 60);
+  const s = abs % 60;
+  const body = h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
+  return `${rounded > 0 ? "+" : "-"}${body}`;
+}
+
+export interface PaceVariant {
+  offsetSec: number;
+  pace: string;
+  time: string;
+  deltaSec: number;
+  isBase: boolean;
+}
+
+/**
+ * A ladder of paces stepping either side of a baseline, with the finish time
+ * each would give over one distance. Offsets that would drive the pace to zero
+ * or below are dropped.
+ */
+export function paceVariants(
+  meters: number,
+  basePaceSec: number,
+  unit: PaceUnit,
+  stepSec = 5,
+  steps = 3,
+): PaceVariant[] {
+  if (basePaceSec <= 0 || meters <= 0) return [];
+  // Round before differencing so the delta always equals the difference between
+  // the two times as displayed, rather than being a second out.
+  const baseTime = Math.round(timeAtPace(meters, basePaceSec, unit));
+
+  const variants: PaceVariant[] = [];
+  for (let i = -steps; i <= steps; i++) {
+    const offsetSec = i * stepSec;
+    const paceSec = basePaceSec + offsetSec;
+    if (paceSec <= 0) continue;
+    const time = Math.round(timeAtPace(meters, paceSec, unit));
+    variants.push({
+      offsetSec,
+      pace: formatPaceSeconds(paceSec),
+      time: formatTime(time),
+      deltaSec: time - baseTime,
+      isBase: offsetSec === 0,
+    });
+  }
+  return variants;
 }

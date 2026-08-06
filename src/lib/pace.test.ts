@@ -10,7 +10,12 @@ import {
   racePace,
   RACE_DISTANCES,
   EMPTY_VALUE,
+  timeAtPace,
+  formatPaceSeconds,
+  formatDelta,
+  paceVariants,
 } from "./pace";
+import { formatTime } from "./time";
 
 describe("mileToKmPace", () => {
   it("converts min/mile to min/km", () => {
@@ -184,5 +189,100 @@ describe("timeToPaceTable", () => {
     const labels = table.map((r) => r.label);
     expect(labels.indexOf("8k")).toBeGreaterThan(labels.indexOf("5k"));
     expect(labels.indexOf("8k")).toBeLessThan(labels.indexOf("10k"));
+  });
+});
+
+describe("timeAtPace", () => {
+  it("computes 10k at 5:00/km", () => {
+    expect(timeAtPace(10000, 300, "min/km")).toBe(3000);
+  });
+
+  it("treats the pace as per mile for min/mile", () => {
+    expect(timeAtPace(1609, 480, "min/mile")).toBeCloseTo(480, 6);
+  });
+
+  it("agrees with paceToTimeTable", () => {
+    const row = paceToTimeTable(5, 0, "min/km").find((r) => r.label === "Marathon")!;
+    expect(formatTime(timeAtPace(42195, 300, "min/km"))).toBe(row.value);
+  });
+});
+
+describe("formatPaceSeconds", () => {
+  it("formats whole and part minutes", () => {
+    expect(formatPaceSeconds(300)).toBe("5:00");
+    expect(formatPaceSeconds(295)).toBe("4:55");
+    expect(formatPaceSeconds(65)).toBe("1:05");
+  });
+});
+
+describe("formatDelta", () => {
+  it("marks no change with the empty value", () => {
+    expect(formatDelta(0)).toBe(EMPTY_VALUE);
+  });
+
+  it("signs gains and losses", () => {
+    expect(formatDelta(207)).toBe("+3:27");
+    expect(formatDelta(-207)).toBe("-3:27");
+    expect(formatDelta(25)).toBe("+0:25");
+  });
+
+  it("includes hours when the difference is large", () => {
+    expect(formatDelta(3807)).toBe("+1:03:27");
+  });
+});
+
+describe("paceVariants", () => {
+  it("returns a symmetric ladder centred on the base pace", () => {
+    const v = paceVariants(42195, 300, "min/km");
+    expect(v).toHaveLength(7);
+    expect(v.map((x) => x.pace)).toEqual(["4:45", "4:50", "4:55", "5:00", "5:05", "5:10", "5:15"]);
+    expect(v.filter((x) => x.isBase)).toHaveLength(1);
+  });
+
+  it("reports the base row as no change and moves both ways around it", () => {
+    const v = paceVariants(42195, 300, "min/km");
+    const base = v.find((x) => x.isBase)!;
+    expect(base.deltaSec).toBe(0);
+    expect(base.time).toBe("03:30:59");
+
+    const faster = v.find((x) => x.offsetSec === -5)!;
+    const slower = v.find((x) => x.offsetSec === 5)!;
+    expect(faster.deltaSec).toBeLessThan(0);
+    expect(slower.deltaSec).toBeGreaterThan(0);
+    // Rounding can leave the two sides a second apart, but no more.
+    expect(Math.abs(faster.deltaSec + slower.deltaSec)).toBeLessThanOrEqual(1);
+  });
+
+  it("keeps each delta equal to the difference between the displayed times", () => {
+    const v = paceVariants(42195, 300, "min/km");
+    const toSec = (t: string) => {
+      const p = t.split(":").map(Number);
+      return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
+    };
+    const base = toSec(v.find((x) => x.isBase)!.time);
+    for (const variant of v) {
+      expect(toSec(variant.time) - base).toBe(variant.deltaSec);
+    }
+  });
+
+  it("honours step size and count", () => {
+    const v = paceVariants(10000, 300, "min/km", 10, 2);
+    expect(v.map((x) => x.offsetSec)).toEqual([-20, -10, 0, 10, 20]);
+  });
+
+  it("uses per-mile steps for min/mile", () => {
+    const v = paceVariants(1609, 480, "min/mile", 15, 1);
+    expect(v.map((x) => x.pace)).toEqual(["7:45", "8:00", "8:15"]);
+    expect(v.map((x) => x.time)).toEqual(["07:45", "08:00", "08:15"]);
+  });
+
+  it("drops offsets that would make the pace zero or negative", () => {
+    const v = paceVariants(5000, 10, "min/km", 5, 3);
+    expect(v.map((x) => x.offsetSec)).toEqual([-5, 0, 5, 10, 15]);
+  });
+
+  it("returns nothing without a usable pace or distance", () => {
+    expect(paceVariants(42195, 0, "min/km")).toEqual([]);
+    expect(paceVariants(0, 300, "min/km")).toEqual([]);
   });
 });
